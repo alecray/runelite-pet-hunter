@@ -229,7 +229,7 @@ public class PetHunterPlugin extends Plugin
 			button.setOriginalX(380);
 			button.setOriginalY(4);
 			button.setHasListener(true);
-			button.setOnOpListener((net.runelite.api.JavaScriptCallback) ev -> reader.readOpenPage());
+			button.setOnOpListener((net.runelite.api.widgets.JavaScriptCallback) ev -> reader.readOpenPage());
 			button.setAction(0, "Sync pets");
 			button.revalidate();
 		}
