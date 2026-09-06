@@ -151,6 +151,12 @@ code follows RuneLite conventions; run the hub's verification template against i
 PR. No third-party dependencies are used (Gson ships with RuneLite), so no Gradle
 verification-metadata changes are required.
 
+## Pet wheel
+
+The pet wheel (a web page for randomly picking which pet to hunt next) moved to its own repo:
+[github.com/alecray/osrs-pet-wheel](https://github.com/alecray/osrs-pet-wheel). It uses the same
+`pets.json` dataset as this plugin. See that repo's README for setup and usage.
+
 ## How pet detection works
 
 RuneLite has no API to read the whole collection log at once — data is only available while a
