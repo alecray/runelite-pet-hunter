@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Rank fixed-rate OSRS boss pets by expected remaining completion time."""
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 import argparse
 import json
@@ -14,7 +14,13 @@ from datetime import datetime, timezone
 
 
 HISCORES_URL = "https://secure.runescape.com/m=hiscore_oldschool/index_lite.json"
-WIKISYNC_URL = "https://sync.runescape.wiki/runelite/player/{}/STANDARD"
+
+# WikiSync (sync.runescape.wiki) used to be queried here for collection-log
+# ownership, but the wiki's own server rejects third-party use of that
+# endpoint (a browser-Origin request gets HTTP 403 "Please do not use
+# WikiSync in your own projects", confirmed live 2026-09-05). Ownership
+# detection is removed rather than worked around; --json snapshots now
+# always report ownership_known: false and an empty owned_item_ids list.
 
 # Times are deliberately editable estimates, not values supplied by the plugin.
 # (pet, source, hiscore activity name, rarity denominator, minutes per attempt,
@@ -110,40 +116,10 @@ def fetch_activities(username):
     return activities
 
 
-def _collection_log_item_ids(payload):
-    """WikiSync returns owned collection-log item ids as a flat list under 'collection_log'."""
-    items = payload.get("collection_log") if isinstance(payload, dict) else None
-    if not isinstance(items, list):
-        return None
-    return {i for i in items if isinstance(i, int) and not isinstance(i, bool)}
-
-
-def fetch_owned_item_ids(username):
-    url = WIKISYNC_URL.format(urllib.parse.quote(username, safe=""))
-    request = urllib.request.Request(url, headers={"User-Agent": "pet-ranker/1.0"})
-    try:
-        with urllib.request.urlopen(request, timeout=15) as response:
-            payload = json.load(response)
-    except urllib.error.HTTPError as exc:
-        if exc.code == 404:
-            return None
-        return None
-    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, UnicodeDecodeError):
-        return None
-
-    if not payload:
-        return None
-    return _collection_log_item_ids(payload)
-
-
-def print_ranking(activities, owned_item_ids):
+def print_ranking(activities):
     rows = []
     missing = []
-    filtered = 0
     for pet, source, activity, rate, minutes, item_id, assumed in PETS:
-        if owned_item_ids is not None and item_id > 0 and item_id in owned_item_ids:
-            filtered += 1
-            continue
         key = activity.casefold()
         if key not in activities:
             missing.append(activity)
@@ -162,10 +138,6 @@ def print_ranking(activities, owned_item_ids):
         rate_text = ("~" if assumed else "") + "1/" + str(rate)
         print(f"{rank:>2}  {pet:<24.24} {source:<38.38} {rate_text:>8} {kc:>8,} {minutes:>8.1f} {hours:>10,.1f} {chance:>9.2%}")
 
-    if owned_item_ids is None:
-        print("\nNote: WikiSync ownership could not be checked; showing the full list.")
-    else:
-        print(f"\nWikiSync: filtered {filtered} owned pet(s).")
     if missing:
         unique = ", ".join(dict.fromkeys(missing))
         print(f"\nNote: activity absent from this hiscore response; KC shown as 0: {unique}", file=sys.stderr)
@@ -174,18 +146,20 @@ def print_ranking(activities, owned_item_ids):
     print("~ = assumed/simplified rate (raid points, team size, or mode variants approximated)")
 
 
-def build_snapshot(username, activities, owned_item_ids):
-    """Build a JSON-serializable snapshot of ranking inputs/outputs for the web pet wheel."""
-    ownership_known = owned_item_ids is not None
-    owned_ids_sorted = sorted(owned_item_ids) if owned_item_ids else []
+def build_snapshot(username, activities):
+    """Build a JSON-serializable snapshot of ranking inputs/outputs for the web pet wheel.
 
+    There is no ownership source any more (WikiSync is off-limits, see the
+    comment above HISCORES_URL), so ownership_known is always False and
+    owned_item_ids is always empty. Callers (web/pet-wheel.html) treat that
+    as "ownership unknown, show every pet" rather than "nothing owned".
+    """
     kc_by_activity = {}
     pets_out = []
     for pet, source, activity, rate, minutes, item_id, assumed in PETS:
         kc = activities.get(activity.casefold(), 0)
         kc_by_activity[activity] = kc
         expected_hours = rate * minutes / 60.0
-        owned = bool(ownership_known and item_id > 0 and item_id in owned_item_ids)
         pets_out.append(
             {
                 "name": pet,
@@ -197,15 +171,15 @@ def build_snapshot(username, activities, owned_item_ids):
                 "assumed": assumed,
                 "kc": kc,
                 "expected_hours": expected_hours,
-                "owned": owned,
+                "owned": False,
             }
         )
 
     return {
         "rsn": username,
         "fetched_at": datetime.now(timezone.utc).isoformat(),
-        "owned_item_ids": owned_ids_sorted,
-        "ownership_known": ownership_known,
+        "owned_item_ids": [],
+        "ownership_known": False,
         "kc": kc_by_activity,
         "pets": pets_out,
     }
@@ -257,18 +231,17 @@ def main():
 
     try:
         activities = fetch_activities(username)
-        owned_item_ids = fetch_owned_item_ids(username)
     except ValueError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 
     if args.json:
-        snapshot = build_snapshot(username, activities, owned_item_ids)
+        snapshot = build_snapshot(username, activities)
         with open(args.json, "w", encoding="utf-8") as fh:
             json.dump(snapshot, fh, indent=2)
         print(args.json)
     else:
-        print_ranking(activities, owned_item_ids)
+        print_ranking(activities)
     return 0
 
 
