@@ -3,7 +3,7 @@
   { "name": "Baron", "itemId": 28250, "source": "Duke Sucellus", "type": "SOLO", "rarity": 2500, "wikiUrl": "https://oldschool.runescape.wiki/w/Baron", "defaultTags": ["boss", "dt2"] },
   { "name": "Beef", "itemId": 0, "source": "Brutus", "type": "SOLO", "rarity": 1000, "wikiUrl": "https://oldschool.runescape.wiki/w/Beef", "defaultTags": ["boss"] },
   { "name": "Bran", "itemId": 0, "source": "The Royal Titans", "type": "BOTH", "rarity": 3000, "wikiUrl": "https://oldschool.runescape.wiki/w/Bran", "defaultTags": ["boss"] },
-  { "name": "Butch", "itemId": 28249, "source": "Vardorvis", "type": "SOLO", "rarity": 3000, "wikiUrl": "https://oldschool.runescape.wiki/w/Butch", "defaultTags": ["boss", "dt2"] },
+  { "name": "Butch", "itemId": 28248, "source": "Vardorvis", "type": "SOLO", "rarity": 3000, "wikiUrl": "https://oldschool.runescape.wiki/w/Butch", "defaultTags": ["boss", "dt2"] },
   { "name": "Callisto cub", "itemId": 13178, "source": "Callisto / Artio", "type": "BOTH", "rarity": 1500, "wikiUrl": "https://oldschool.runescape.wiki/w/Callisto_cub", "defaultTags": ["boss", "wilderness"] },
   { "name": "Dom", "itemId": 0, "source": "Doom of Mokhaiotl", "type": "SOLO", "rarity": 1000, "wikiUrl": "https://oldschool.runescape.wiki/w/Dom", "defaultTags": ["boss"] },
   { "name": "Hellpuppy", "itemId": 13247, "source": "Cerberus", "type": "SOLO", "rarity": 3000, "wikiUrl": "https://oldschool.runescape.wiki/w/Hellpuppy", "defaultTags": ["boss", "slayer"] },
