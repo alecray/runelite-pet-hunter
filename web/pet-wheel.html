@@ -1,0 +1,1700 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pet Hunt Wheel</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --bg: #14110d;
+    --panel: #201a13;
+    --panel-2: #291f16;
+    --border: #40331f;
+    --text: #ece3d0;
+    --muted: #a8987d;
+    --gold: #d9b34a;
+    --gold-dim: #a9843a;
+    --green: #7bbf6a;
+    --red: #c25c4a;
+    --focus: #e8c766;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", "Trebuchet MS", Verdana, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+    padding: 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  h1,h2,h3{ font-family: Georgia, "Times New Roman", serif; margin: 0 0 8px; color: var(--gold); }
+  h1{ font-size: 1.6em; display:flex; align-items:center; gap:10px; }
+  h1 .rsn{ font-size: 0.5em; color: var(--muted); font-weight: normal; }
+  a{ color: var(--gold); }
+  a:hover{ color: var(--focus); }
+  button, input[type="file"], input[type="number"], textarea{
+    font-family: inherit;
+    font-size: 0.95em;
+    color: var(--text);
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  button{
+    padding: 6px 12px;
+    cursor: pointer;
+    color: var(--bg);
+    background: var(--gold);
+    border-color: var(--gold-dim);
+    font-weight: 600;
+  }
+  button:hover{ background: var(--focus); }
+  button:disabled{ background: var(--panel-2); color: var(--muted); cursor: not-allowed; border-color: var(--border); }
+  button.secondary{ background: var(--panel-2); color: var(--text); border-color: var(--border); font-weight: normal; }
+  button.secondary:hover{ background: #33291a; }
+  button:focus-visible, input:focus-visible, a:focus-visible{ outline: 2px solid var(--focus); outline-offset: 2px; }
+  input[type="number"]{ padding: 4px 6px; width: 80px; }
+  textarea{ width: 100%; min-height: 70px; padding: 6px; resize: vertical; }
+  .panel{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  .row{ display:flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .grid{
+    display:grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(280px, 1fr);
+    gap: 14px;
+    align-items: start;
+  }
+  @media (max-width: 860px){
+    .grid{ grid-template-columns: 1fr; }
+  }
+  table{ width:100%; border-collapse: collapse; font-size: 0.92em; }
+  th,td{ padding: 5px 6px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th{ color: var(--gold); font-weight: 600; position: sticky; top: 0; background: var(--panel); }
+  tbody tr:hover{ background: var(--panel-2); }
+  .tablewrap{ max-height: 420px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; }
+  .num{ text-align: right; font-variant-numeric: tabular-nums; }
+  .muted{ color: var(--muted); }
+  .assumed::after{ content: "~"; color: var(--muted); margin-left: 2px; }
+  .pill{
+    display:inline-block; padding: 1px 7px; border-radius: 10px;
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--muted); font-size: 0.85em;
+  }
+  .wheel-wrap{
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto;
+  }
+  #wheel-canvas{
+    width: 100%; height: 100%;
+    display: block;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+  }
+  .pointer{
+    position: absolute;
+    top: -4px; left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 14px solid transparent;
+    border-right: 14px solid transparent;
+    border-top: 22px solid var(--focus);
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.6));
+    z-index: 2;
+  }
+  .spin-row{ display:flex; justify-content:center; margin-top: 10px; gap: 8px; }
+  #result-card{
+    margin-top: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--gold-dim);
+    border-radius: 6px;
+    background: var(--panel-2);
+    display: none;
+  }
+  #result-card.show{ display:block; }
+  #result-card .pet-name{ font-size: 1.15em; color: var(--gold); font-family: Georgia, serif; }
+  .history-item{
+    display:flex; justify-content: space-between; gap: 8px;
+    padding: 4px 0; border-bottom: 1px solid var(--border); font-size: 0.9em;
+  }
+  .history-item.done .pet{ text-decoration: line-through; color: var(--muted); }
+  .history-item label{ display:flex; align-items:center; gap: 4px; white-space: nowrap; }
+  footer{ color: var(--muted); font-size: 0.82em; margin-top: 18px; text-align:center; }
+  .flex-1{ flex: 1 1 auto; }
+  .hint{ font-size: 0.85em; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<h1>Pet Hunt Wheel <span class="rsn" id="rsn-label">no player set</span></h1>
+
+<div class="panel">
+  <h2>1. Player</h2>
+  <div class="row">
+    <label for="rsn-input" class="muted">RSN</label>
+    <input type="text" id="rsn-input" placeholder="e.g. a tbow" style="width:180px;">
+    <button id="fetch-wom-btn">Fetch from Wise Old Man</button>
+    <span class="hint" id="wom-status"></span>
+  </div>
+  <p class="hint" id="wom-staleness"></p>
+  <p class="hint">
+    Wise Old Man supplies live KC and community kill-rate data per boss.
+    It does <strong>not</strong> know which pets you own (WikiSync ownership
+    lookups were removed from <code>pet_ranker.py</code> -- see README) --
+    every pet stays in the hunt list until you uncheck it below.
+  </p>
+  <details>
+    <summary class="hint" style="cursor:pointer;">Advanced: load a pet_ranker.py snapshot instead/as well</summary>
+    <p class="hint">Generate one with <code>python pet_ranker.py --rsn "your name" --json snapshot.json</code>, then load it here. Fills KC (hiscores-based) as a fallback when no Wise Old Man data is loaded for a pet's activity.</p>
+    <div class="row">
+      <input type="file" id="snapshot-file" accept="application/json,.json">
+      <span class="muted">or paste JSON:</span>
+    </div>
+    <div class="row" style="margin-top:6px;">
+      <textarea id="snapshot-paste" placeholder='{"rsn": "...", "pets": [...], ...}'></textarea>
+    </div>
+    <div class="row" style="margin-top:6px;">
+      <button id="apply-paste-btn">Apply pasted JSON</button>
+      <button class="secondary" id="clear-snapshot-btn">Clear snapshot</button>
+      <span class="hint" id="snapshot-status"></span>
+    </div>
+  </details>
+</div>
+
+<div class="grid">
+  <div class="panel">
+    <h2>2. Hunt list</h2>
+    <div class="row" style="margin-bottom:8px;">
+      <button id="select-top8-btn">Select top 8 quickest</button>
+      <span class="hint"><span id="hunting-count">0</span> pet(s) selected for the wheel</span>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Hunt</th>
+            <th>Pet</th>
+            <th>Source</th>
+            <th class="num">1/rate</th>
+            <th class="num">Est. hours</th>
+            <th class="num">KC</th>
+            <th class="num">Chance so far</th>
+            <th class="num">P(dry)</th>
+            <th>Boost</th>
+          </tr>
+        </thead>
+        <tbody id="hunt-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>3. Spin</h2>
+    <div class="row" style="margin-bottom:8px;">
+      <label for="session-minutes" class="muted">Session length</label>
+      <input type="number" id="session-minutes" min="1" step="5" value="90">
+      <span class="muted">min</span>
+    </div>
+    <div class="wheel-wrap">
+      <div class="pointer"></div>
+      <canvas id="wheel-canvas" width="380" height="380"></canvas>
+    </div>
+    <div class="spin-row">
+      <button id="spin-btn">Spin (space)</button>
+    </div>
+    <div id="result-card">
+      <div class="pet-name" id="result-name"></div>
+      <div class="muted" id="result-source"></div>
+      <div id="result-wiki"></div>
+      <div style="margin-top:6px;">
+        Do <strong id="result-chunk"></strong> kills/attempts
+        <span class="muted">(&asymp; <span id="result-minutes"></span> min)</span>
+      </div>
+      <div class="muted" id="result-chance-session"></div>
+      <div class="row" style="margin-top:8px;">
+        <button class="secondary" id="reroll-chunk-btn">Reroll chunk</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Spin history <span class="hint">(last 20)</span></h2>
+  <div id="history-list"></div>
+  <p class="hint" id="history-empty">No spins yet.</p>
+</div>
+
+<div class="panel">
+  <h2>Backup</h2>
+  <div class="row">
+    <button class="secondary" id="export-btn">Export all data (.json)</button>
+    <input type="file" id="import-file" accept="application/json,.json">
+    <button class="secondary" id="import-btn">Import</button>
+    <span class="hint" id="backup-status"></span>
+  </div>
+</div>
+
+<footer>Pet Hunt Wheel &mdash; runs entirely offline from this file. All data lives in this browser's local storage.</footer>
+
+<!-- Embedded default pet dataset. Regenerate with: python web/build_pet_data.py -->
+<script id="pet-data" type="application/json">
+[
+  {
+    "name": "Abyssal orphan",
+    "source": "Abyssal Sire",
+    "activity": "Abyssal Sire",
+    "rarity": 2560,
+    "minutes_per_attempt": 2.5,
+    "assumed": false,
+    "item_id": 13262,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Abyssal_orphan",
+    "type": "SOLO",
+    "wom": "abyssal_sire"
+  },
+  {
+    "name": "Abyssal protector",
+    "source": "Guardians of the Rift",
+    "activity": "Rifts closed",
+    "rarity": 500,
+    "minutes_per_attempt": 10.0,
+    "assumed": true,
+    "item_id": 26901,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Abyssal_protector",
+    "type": "BOTH",
+    "wom": null
+  },
+  {
+    "name": "Baron",
+    "source": "Duke Sucellus",
+    "activity": "Duke Sucellus",
+    "rarity": 2500,
+    "minutes_per_attempt": 2.5,
+    "assumed": false,
+    "item_id": 28250,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Baron",
+    "type": "SOLO",
+    "wom": "duke_sucellus"
+  },
+  {
+    "name": "Beef",
+    "source": "Brutus",
+    "activity": "Brutus",
+    "rarity": 1000,
+    "minutes_per_attempt": 2.0,
+    "assumed": false,
+    "item_id": 33124,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Beef",
+    "type": "SOLO",
+    "wom": "brutus"
+  },
+  {
+    "name": "Bran",
+    "source": "The Royal Titans",
+    "activity": "The Royal Titans",
+    "rarity": 3000,
+    "minutes_per_attempt": 3.0,
+    "assumed": false,
+    "item_id": 30622,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Bran",
+    "type": "BOTH",
+    "wom": "the_royal_titans"
+  },
+  {
+    "name": "Butch",
+    "source": "Vardorvis",
+    "activity": "Vardorvis",
+    "rarity": 3000,
+    "minutes_per_attempt": 2.0,
+    "assumed": false,
+    "item_id": 28248,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Butch",
+    "type": "SOLO",
+    "wom": "vardorvis"
+  },
+  {
+    "name": "Callisto cub",
+    "source": "Artio",
+    "activity": "Artio",
+    "rarity": 2800,
+    "minutes_per_attempt": 1.5,
+    "assumed": false,
+    "item_id": 13178,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Callisto_cub",
+    "type": "BOTH",
+    "wom": "artio"
+  },
+  {
+    "name": "Dom",
+    "source": "Doom of Mokhaiotl (delve 6)",
+    "activity": "Doom of Mokhaiotl",
+    "rarity": 1000,
+    "minutes_per_attempt": 12.0,
+    "assumed": true,
+    "item_id": 31130,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Dom",
+    "type": "SOLO",
+    "wom": "doom_of_mokhaiotl"
+  },
+  {
+    "name": "Hellpuppy",
+    "source": "Cerberus",
+    "activity": "Cerberus",
+    "rarity": 3000,
+    "minutes_per_attempt": 1.5,
+    "assumed": false,
+    "item_id": 13247,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Hellpuppy",
+    "type": "SOLO",
+    "wom": "cerberus"
+  },
+  {
+    "name": "Huberte",
+    "source": "The Hueycoatl (MVP)",
+    "activity": "The Hueycoatl",
+    "rarity": 400,
+    "minutes_per_attempt": 4.0,
+    "assumed": true,
+    "item_id": 30152,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Huberte",
+    "type": "BOTH",
+    "wom": "the_hueycoatl"
+  },
+  {
+    "name": "Ikkle hydra",
+    "source": "Alchemical Hydra",
+    "activity": "Alchemical Hydra",
+    "rarity": 3000,
+    "minutes_per_attempt": 2.0,
+    "assumed": false,
+    "item_id": 22746,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Ikkle_hydra",
+    "type": "SOLO",
+    "wom": "alchemical_hydra"
+  },
+  {
+    "name": "Jal-nib-rek",
+    "source": "The Inferno",
+    "activity": "TzKal-Zuk",
+    "rarity": 100,
+    "minutes_per_attempt": 90.0,
+    "assumed": true,
+    "item_id": 21291,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Jal-nib-rek",
+    "type": "SOLO",
+    "wom": "tzkal_zuk"
+  },
+  {
+    "name": "Kalphite princess",
+    "source": "Kalphite Queen",
+    "activity": "Kalphite Queen",
+    "rarity": 3000,
+    "minutes_per_attempt": 2.5,
+    "assumed": false,
+    "item_id": 12647,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Kalphite_princess",
+    "type": "BOTH",
+    "wom": "kalphite_queen"
+  },
+  {
+    "name": "Lil' zik",
+    "source": "Theatre of Blood",
+    "activity": "Theatre of Blood",
+    "rarity": 650,
+    "minutes_per_attempt": 20.0,
+    "assumed": true,
+    "item_id": 22473,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Lil'_zik",
+    "type": "GROUP",
+    "wom": "theatre_of_blood"
+  },
+  {
+    "name": "Lil'viathan",
+    "source": "The Leviathan",
+    "activity": "The Leviathan",
+    "rarity": 2500,
+    "minutes_per_attempt": 2.0,
+    "assumed": false,
+    "item_id": 28252,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Lil'viathan",
+    "type": "SOLO",
+    "wom": "the_leviathan"
+  },
+  {
+    "name": "Little nightmare",
+    "source": "Phosani's Nightmare",
+    "activity": "Phosani's Nightmare",
+    "rarity": 1400,
+    "minutes_per_attempt": 8.0,
+    "assumed": false,
+    "item_id": 24491,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Little_nightmare",
+    "type": "BOTH",
+    "wom": "phosanis_nightmare"
+  },
+  {
+    "name": "Moxi",
+    "source": "Amoxliatl",
+    "activity": "Amoxliatl",
+    "rarity": 3000,
+    "minutes_per_attempt": 1.5,
+    "assumed": false,
+    "item_id": 30154,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Moxi",
+    "type": "SOLO",
+    "wom": "amoxliatl"
+  },
+  {
+    "name": "Muphin",
+    "source": "Phantom Muspah",
+    "activity": "Phantom Muspah",
+    "rarity": 2500,
+    "minutes_per_attempt": 3.0,
+    "assumed": false,
+    "item_id": 27590,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Muphin",
+    "type": "SOLO",
+    "wom": "phantom_muspah"
+  },
+  {
+    "name": "Nexling",
+    "source": "Nex",
+    "activity": "Nex",
+    "rarity": 500,
+    "minutes_per_attempt": 4.0,
+    "assumed": true,
+    "item_id": 26348,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Nexling",
+    "type": "GROUP",
+    "wom": "nex"
+  },
+  {
+    "name": "Nid",
+    "source": "Araxxor",
+    "activity": "Araxxor",
+    "rarity": 3000,
+    "minutes_per_attempt": 2.0,
+    "assumed": false,
+    "item_id": 29836,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Nid",
+    "type": "BOTH",
+    "wom": "araxxor"
+  },
+  {
+    "name": "Noon",
+    "source": "Grotesque Guardians",
+    "activity": "Grotesque Guardians",
+    "rarity": 3000,
+    "minutes_per_attempt": 3.0,
+    "assumed": false,
+    "item_id": 21748,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Noon",
+    "type": "SOLO",
+    "wom": "grotesque_guardians"
+  },
+  {
+    "name": "Olmlet",
+    "source": "Chambers of Xeric (30k pts)",
+    "activity": "Chambers of Xeric",
+    "rarity": 53,
+    "minutes_per_attempt": 25.0,
+    "assumed": true,
+    "item_id": 20851,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Olmlet",
+    "type": "BOTH",
+    "wom": "chambers_of_xeric"
+  },
+  {
+    "name": "Pet chaos elemental",
+    "source": "Chaos Elemental",
+    "activity": "Chaos Elemental",
+    "rarity": 300,
+    "minutes_per_attempt": 2.5,
+    "assumed": false,
+    "item_id": 11995,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_chaos_elemental",
+    "type": "BOTH",
+    "wom": "chaos_elemental"
+  },
+  {
+    "name": "Pet dagannoth prime",
+    "source": "Dagannoth Kings",
+    "activity": "Dagannoth Prime",
+    "rarity": 5000,
+    "minutes_per_attempt": 1.0,
+    "assumed": false,
+    "item_id": 12646,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_dagannoth_prime",
+    "type": "BOTH",
+    "wom": "dagannoth_prime"
+  },
+  {
+    "name": "Pet dagannoth rex",
+    "source": "Dagannoth Kings",
+    "activity": "Dagannoth Rex",
+    "rarity": 5000,
+    "minutes_per_attempt": 1.0,
+    "assumed": false,
+    "item_id": 12645,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_dagannoth_rex",
+    "type": "BOTH",
+    "wom": "dagannoth_rex"
+  },
+  {
+    "name": "Pet dagannoth supreme",
+    "source": "Dagannoth Kings",
+    "activity": "Dagannoth Supreme",
+    "rarity": 5000,
+    "minutes_per_attempt": 1.0,
+    "assumed": false,
+    "item_id": 12644,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_dagannoth_supreme",
+    "type": "BOTH",
+    "wom": "dagannoth_supreme"
+  },
+  {
+    "name": "Pet dark core",
+    "source": "Corporeal Beast",
+    "activity": "Corporeal Beast",
+    "rarity": 5000,
+    "minutes_per_attempt": 4.0,
+    "assumed": false,
+    "item_id": 12816,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_dark_core",
+    "type": "BOTH",
+    "wom": "corporeal_beast"
+  },
+  {
+    "name": "Pet general graardor",
+    "source": "General Graardor (Bandos GWD)",
+    "activity": "General Graardor",
+    "rarity": 5000,
+    "minutes_per_attempt": 1.5,
+    "assumed": false,
+    "item_id": 12650,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_general_graardor",
+    "type": "BOTH",
+    "wom": "general_graardor"
+  },
+  {
+    "name": "Pet k'ril tsutsaroth",
+    "source": "K'ril Tsutsaroth (Zamorak GWD)",
+    "activity": "K'ril Tsutsaroth",
+    "rarity": 5000,
+    "minutes_per_attempt": 1.5,
+    "assumed": false,
+    "item_id": 12652,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_k'ril_tsutsaroth",
+    "type": "BOTH",
+    "wom": "kril_tsutsaroth"
+  },
+  {
+    "name": "Pet kraken",
+    "source": "Kraken",
+    "activity": "Kraken",
+    "rarity": 3000,
+    "minutes_per_attempt": 1.0,
+    "assumed": false,
+    "item_id": 12655,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_kraken",
+    "type": "SOLO",
+    "wom": "kraken"
+  },
+  {
+    "name": "Pet kree'arra",
+    "source": "Kree'arra (Armadyl GWD)",
+    "activity": "Kree'Arra",
+    "rarity": 5000,
+    "minutes_per_attempt": 2.0,
+    "assumed": false,
+    "item_id": 12649,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_kree'arra",
+    "type": "BOTH",
+    "wom": "kreearra"
+  },
+  {
+    "name": "Pet smoke devil",
+    "source": "Thermonuclear Smoke Devil",
+    "activity": "Thermonuclear Smoke Devil",
+    "rarity": 3000,
+    "minutes_per_attempt": 1.0,
+    "assumed": false,
+    "item_id": 12648,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_smoke_devil",
+    "type": "SOLO",
+    "wom": "thermonuclear_smoke_devil"
+  },
+  {
+    "name": "Pet snakeling",
+    "source": "Zulrah",
+    "activity": "Zulrah",
+    "rarity": 4000,
+    "minutes_per_attempt": 1.5,
+    "assumed": false,
+    "item_id": 12921,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_snakeling",
+    "type": "SOLO",
+    "wom": "zulrah"
+  },
+  {
+    "name": "Pet zilyana",
+    "source": "Commander Zilyana (Saradomin GWD)",
+    "activity": "Commander Zilyana",
+    "rarity": 5000,
+    "minutes_per_attempt": 1.5,
+    "assumed": false,
+    "item_id": 12651,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_zilyana",
+    "type": "BOTH",
+    "wom": "commander_zilyana"
+  },
+  {
+    "name": "Phoenix",
+    "source": "Wintertodt (~2 crates/game)",
+    "activity": "Wintertodt",
+    "rarity": 2500,
+    "minutes_per_attempt": 5.0,
+    "assumed": true,
+    "item_id": 20693,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Phoenix_(pet)",
+    "type": "BOTH",
+    "wom": null
+  },
+  {
+    "name": "Prince black dragon",
+    "source": "King Black Dragon",
+    "activity": "King Black Dragon",
+    "rarity": 3000,
+    "minutes_per_attempt": 1.5,
+    "assumed": false,
+    "item_id": 12653,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Prince_black_dragon",
+    "type": "BOTH",
+    "wom": "king_black_dragon"
+  },
+  {
+    "name": "Scorpia's offspring",
+    "source": "Scorpia",
+    "activity": "Scorpia",
+    "rarity": 2016,
+    "minutes_per_attempt": 1.0,
+    "assumed": false,
+    "item_id": 13181,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Scorpia's_offspring",
+    "type": "BOTH",
+    "wom": "scorpia"
+  },
+  {
+    "name": "Scurry",
+    "source": "Scurrius",
+    "activity": "Scurrius",
+    "rarity": 3000,
+    "minutes_per_attempt": 1.0,
+    "assumed": false,
+    "item_id": 28579,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Scurry",
+    "type": "BOTH",
+    "wom": "scurrius"
+  },
+  {
+    "name": "Skotos",
+    "source": "Skotizo",
+    "activity": "Skotizo",
+    "rarity": 65,
+    "minutes_per_attempt": 4.0,
+    "assumed": false,
+    "item_id": 21273,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Skotos",
+    "type": "SOLO",
+    "wom": "skotizo"
+  },
+  {
+    "name": "Smol heredit",
+    "source": "Sol Heredit",
+    "activity": "Sol Heredit",
+    "rarity": 200,
+    "minutes_per_attempt": 35.0,
+    "assumed": false,
+    "item_id": 29039,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Smol_heredit",
+    "type": "SOLO",
+    "wom": "sol_heredit"
+  },
+  {
+    "name": "Smolcano",
+    "source": "Zalcano",
+    "activity": "Zalcano",
+    "rarity": 2250,
+    "minutes_per_attempt": 3.0,
+    "assumed": false,
+    "item_id": 23760,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Smolcano",
+    "type": "GROUP",
+    "wom": null
+  },
+  {
+    "name": "Sraracha",
+    "source": "Sarachnis",
+    "activity": "Sarachnis",
+    "rarity": 3000,
+    "minutes_per_attempt": 1.5,
+    "assumed": false,
+    "item_id": 25838,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Sraracha",
+    "type": "SOLO",
+    "wom": "sarachnis"
+  },
+  {
+    "name": "Tiny tempor",
+    "source": "Tempoross (~5 permits/game)",
+    "activity": "Tempoross",
+    "rarity": 1600,
+    "minutes_per_attempt": 10.0,
+    "assumed": true,
+    "item_id": 25602,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Tiny_tempor",
+    "type": "BOTH",
+    "wom": null
+  },
+  {
+    "name": "Tumeken's guardian",
+    "source": "Tombs of Amascut (300, ~30k pts)",
+    "activity": "Tombs of Amascut: Expert Mode",
+    "rarity": 467,
+    "minutes_per_attempt": 25.0,
+    "assumed": true,
+    "item_id": 27352,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Tumeken's_guardian",
+    "type": "BOTH",
+    "wom": "tombs_of_amascut_expert"
+  },
+  {
+    "name": "Tzrek-jad",
+    "source": "TzHaar Fight Cave",
+    "activity": "TzTok-Jad",
+    "rarity": 200,
+    "minutes_per_attempt": 40.0,
+    "assumed": true,
+    "item_id": 13225,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Tzrek-jad",
+    "type": "SOLO",
+    "wom": "tztok_jad"
+  },
+  {
+    "name": "Venenatis spiderling",
+    "source": "Spindel",
+    "activity": "Spindel",
+    "rarity": 2800,
+    "minutes_per_attempt": 1.5,
+    "assumed": false,
+    "item_id": 13177,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Venenatis_spiderling",
+    "type": "BOTH",
+    "wom": "spindel"
+  },
+  {
+    "name": "Vet'ion jr.",
+    "source": "Calvar'ion",
+    "activity": "Calvar'ion",
+    "rarity": 2800,
+    "minutes_per_attempt": 1.5,
+    "assumed": false,
+    "item_id": 13179,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Vet'ion_jr.",
+    "type": "BOTH",
+    "wom": "calvarion"
+  },
+  {
+    "name": "Vorki",
+    "source": "Vorkath",
+    "activity": "Vorkath",
+    "rarity": 3000,
+    "minutes_per_attempt": 1.5,
+    "assumed": false,
+    "item_id": 21992,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Vorki",
+    "type": "SOLO",
+    "wom": "vorkath"
+  },
+  {
+    "name": "Wisp",
+    "source": "The Whisperer",
+    "activity": "The Whisperer",
+    "rarity": 2000,
+    "minutes_per_attempt": 2.5,
+    "assumed": false,
+    "item_id": 28246,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Wisp_(pet)",
+    "type": "SOLO",
+    "wom": "the_whisperer"
+  },
+  {
+    "name": "Yami",
+    "source": "Yama",
+    "activity": "Yama",
+    "rarity": 2500,
+    "minutes_per_attempt": 3.0,
+    "assumed": false,
+    "item_id": 30888,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Yami",
+    "type": "BOTH",
+    "wom": "yama"
+  },
+  {
+    "name": "Youngllef",
+    "source": "The Corrupted Gauntlet",
+    "activity": "The Corrupted Gauntlet",
+    "rarity": 800,
+    "minutes_per_attempt": 10.0,
+    "assumed": false,
+    "item_id": 23757,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Youngllef",
+    "type": "SOLO",
+    "wom": "the_corrupted_gauntlet"
+  }
+]
+</script>
+
+<script>
+"use strict";
+
+/* ---------------------------------------------------------------------
+ * Storage keys.
+ *
+ * Everything except the current RSN and the (shared, not per-player) WOM
+ * efficiency-rate cache is namespaced by RSN, so multiple accounts don't
+ * clobber each other's hunt list / boosts / history. The active RSN
+ * itself has to live outside that namespace (it's what picks the
+ * namespace), and the WOM rate table is genuinely global data.
+ * ------------------------------------------------------------------- */
+const LS_PREFIX = "petwheel.";
+const LS_CURRENT_RSN = LS_PREFIX + "currentRsn.v1";
+const LS_WOM_RATES = LS_PREFIX + "womRates.v1";
+
+const HISTORY_LIMIT = 20;
+const CHUNK_MIN = 1;
+const CHUNK_MAX = 750;
+const CHUNK_STEPS = [1, 2, 3, 5, 10, 15, 20, 25, 50, 75, 100, 150, 200, 250, 300, 500, 750];
+const WOM_STALE_MS = 24 * 60 * 60 * 1000; // 24h
+
+function accountKey(suffix) {
+  const slug = (rsn || "default").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_") || "default";
+  return LS_PREFIX + slug + "." + suffix;
+}
+
+/* ---------------------------------------------------------------------
+ * State
+ * ------------------------------------------------------------------- */
+let DEFAULT_PETS = [];
+try {
+  DEFAULT_PETS = JSON.parse(document.getElementById("pet-data").textContent);
+} catch (err) {
+  console.error("Failed to parse embedded pet data", err);
+}
+
+let rsn = "";                 // current player, drives the localStorage namespace
+let snapshot = null;          // parsed pet_ranker.py --json snapshot, or null (optional fallback)
+let womPlayer = null;         // { fetched_at, bosses: {metric: kills} } from WOM /players/{rsn}
+let womRates = null;          // { fetched_at, rates: {boss: killsPerHour} } from WOM efficiency rates (global)
+let huntingSet = new Set();   // pet names currently selected for the wheel
+let boosts = {};              // pet name -> 0.5 | 1 | 2 user weight multiplier
+let sessionMinutes = 90;
+let history = [];             // [{pet, source, wikiUrl, chunk, minutes, timestamp, done}]
+let pets = [];                // DEFAULT_PETS merged with WOM/snapshot kc + rates, recomputed on demand
+
+let isSpinning = false;
+let wheelRotation = 0;        // radians, accumulated across spins
+let currentWheelSlices = [];  // slices drawn on the canvas right now (unrotated frame)
+let pendingResult = null;     // { pet, ... } most recently landed on, for "reroll chunk"
+
+/* ---------------------------------------------------------------------
+ * localStorage helpers (every read/write guarded: private browsing,
+ * cleared site data, or a blocked storage API must not crash the page)
+ * ------------------------------------------------------------------- */
+function lsGet(key) {
+  try { return localStorage.getItem(key); } catch (err) { return null; }
+}
+function lsSet(key, value) {
+  try { localStorage.setItem(key, value); } catch (err) { /* ignore */ }
+}
+function lsRemove(key) {
+  try { localStorage.removeItem(key); } catch (err) { /* ignore */ }
+}
+
+function loadState() {
+  rsn = lsGet(LS_CURRENT_RSN) || "";
+
+  const rawRates = lsGet(LS_WOM_RATES);
+  if (rawRates) {
+    try { womRates = JSON.parse(rawRates); } catch (err) { womRates = null; }
+  }
+
+  const rawSnapshot = lsGet(accountKey("snapshot.v1"));
+  if (rawSnapshot) {
+    try { snapshot = JSON.parse(rawSnapshot); } catch (err) { snapshot = null; }
+  }
+  const rawWomPlayer = lsGet(accountKey("womPlayer.v1"));
+  if (rawWomPlayer) {
+    try { womPlayer = JSON.parse(rawWomPlayer); } catch (err) { womPlayer = null; }
+  }
+  const rawHunting = lsGet(accountKey("hunting.v1"));
+  if (rawHunting) {
+    try { huntingSet = new Set(JSON.parse(rawHunting)); } catch (err) { huntingSet = new Set(); }
+  }
+  const rawBoosts = lsGet(accountKey("boosts.v1"));
+  if (rawBoosts) {
+    try { boosts = JSON.parse(rawBoosts); } catch (err) { boosts = {}; }
+  }
+  const rawMinutes = lsGet(accountKey("sessionMinutes.v1"));
+  if (rawMinutes && !Number.isNaN(Number(rawMinutes))) {
+    sessionMinutes = Math.max(1, Number(rawMinutes));
+  }
+  const rawHistory = lsGet(accountKey("history.v1"));
+  if (rawHistory) {
+    try { history = JSON.parse(rawHistory); } catch (err) { history = []; }
+  }
+}
+
+function saveCurrentRsn() { lsSet(LS_CURRENT_RSN, rsn); }
+function saveHunting() { lsSet(accountKey("hunting.v1"), JSON.stringify(Array.from(huntingSet))); }
+function saveBoosts() { lsSet(accountKey("boosts.v1"), JSON.stringify(boosts)); }
+function saveSessionMinutes() { lsSet(accountKey("sessionMinutes.v1"), String(sessionMinutes)); }
+function saveHistory() { lsSet(accountKey("history.v1"), JSON.stringify(history)); }
+function saveSnapshot() {
+  if (snapshot) lsSet(accountKey("snapshot.v1"), JSON.stringify(snapshot));
+  else lsRemove(accountKey("snapshot.v1"));
+}
+function saveWomPlayer() {
+  if (womPlayer) lsSet(accountKey("womPlayer.v1"), JSON.stringify(womPlayer));
+  else lsRemove(accountKey("womPlayer.v1"));
+}
+function saveWomRates() {
+  if (womRates) lsSet(LS_WOM_RATES, JSON.stringify(womRates));
+  else lsRemove(LS_WOM_RATES);
+}
+
+/* ---------------------------------------------------------------------
+ * Reload every per-account key for the currently-set RSN and re-render.
+ * Called whenever the RSN input changes so switching accounts swaps the
+ * whole hunt list / boosts / history / cached WOM player data at once.
+ * ------------------------------------------------------------------- */
+function switchAccount(newRsn) {
+  rsn = newRsn;
+  saveCurrentRsn();
+  snapshot = null; womPlayer = null; huntingSet = new Set(); boosts = {}; history = [];
+  sessionMinutes = 90;
+  const rawSnapshot = lsGet(accountKey("snapshot.v1"));
+  if (rawSnapshot) { try { snapshot = JSON.parse(rawSnapshot); } catch (err) { /* ignore */ } }
+  const rawWomPlayer = lsGet(accountKey("womPlayer.v1"));
+  if (rawWomPlayer) { try { womPlayer = JSON.parse(rawWomPlayer); } catch (err) { /* ignore */ } }
+  const rawHunting = lsGet(accountKey("hunting.v1"));
+  if (rawHunting) { try { huntingSet = new Set(JSON.parse(rawHunting)); } catch (err) { /* ignore */ } }
+  const rawBoosts = lsGet(accountKey("boosts.v1"));
+  if (rawBoosts) { try { boosts = JSON.parse(rawBoosts); } catch (err) { /* ignore */ } }
+  const rawMinutes = lsGet(accountKey("sessionMinutes.v1"));
+  if (rawMinutes && !Number.isNaN(Number(rawMinutes))) sessionMinutes = Math.max(1, Number(rawMinutes));
+  const rawHistory = lsGet(accountKey("history.v1"));
+  if (rawHistory) { try { history = JSON.parse(rawHistory); } catch (err) { /* ignore */ } }
+  recomputePets();
+  render();
+}
+
+/* ---------------------------------------------------------------------
+ * Merge embedded pet dataset with live Wise Old Man data (preferred) and
+ * the optional pet_ranker.py snapshot (fallback). Priority per field:
+ *
+ *   KC:      WOM player kills for pet.wom, if loaded and not -1 (unranked)
+ *            -> else snapshot.kc[pet.activity] (hiscores), if loaded
+ *            -> else null ("?" = truly unknown, never treated as 0)
+ *   minutes: 60 / WOM efficiency rate for pet.wom, if loaded and rate > 0
+ *            -> else the hardcoded minutes_per_attempt estimate
+ *
+ * Ownership has no live source any more (WikiSync is off-limits, see
+ * README) -- it only ever comes from a manually-loaded snapshot, which
+ * pet_ranker.py now always reports as ownership_known: false. In
+ * practice every pet stays in the hunt list; the user unchecks ones
+ * they already own.
+ * ------------------------------------------------------------------- */
+function recomputePets() {
+  const ownedIds = new Set((snapshot && snapshot.ownership_known) ? snapshot.owned_item_ids : []);
+  const ownershipKnown = !!(snapshot && snapshot.ownership_known);
+  const kcByActivity = (snapshot && snapshot.kc) ? snapshot.kc : {};
+  const womBosses = (womPlayer && womPlayer.bosses) ? womPlayer.bosses : {};
+  const rates = (womRates && womRates.rates) ? womRates.rates : {};
+
+  pets = DEFAULT_PETS.map(function (p) {
+    const owned = ownershipKnown && p.item_id > 0 && ownedIds.has(p.item_id);
+
+    let kc = null;
+    let kcSource = "unknown";
+    if (p.wom && Object.prototype.hasOwnProperty.call(womBosses, p.wom) && womBosses[p.wom] !== -1) {
+      kc = womBosses[p.wom];
+      kcSource = "wom";
+    } else if (Object.prototype.hasOwnProperty.call(kcByActivity, p.activity)) {
+      kc = kcByActivity[p.activity];
+      kcSource = "hiscores";
+    }
+
+    let minutesPerAttempt = p.minutes_per_attempt;
+    let rateSource = "default";
+    if (p.wom && Object.prototype.hasOwnProperty.call(rates, p.wom) && rates[p.wom] > 0) {
+      minutesPerAttempt = 60 / rates[p.wom];
+      rateSource = "wom";
+    }
+
+    const expectedHours = (p.rarity * minutesPerAttempt) / 60;
+    const kcForMath = kc === null ? 0 : kc;
+    const chance = 1 - Math.pow(1 - 1 / p.rarity, kcForMath);      // "chance so far" you'd already have it
+    const dryChance = Math.pow(1 - 1 / p.rarity, kcForMath);        // P(dry so far) -- display only, never fed into weight
+    const boost = boosts[p.name] || 1;
+
+    return Object.assign({}, p, {
+      owned: owned,
+      kc: kc,
+      kcSource: kcSource,
+      minutesPerAttempt: minutesPerAttempt,
+      rateSource: rateSource,
+      expectedHours: expectedHours,
+      chance: chance,
+      dryChance: dryChance,
+      boost: boost
+    });
+  });
+
+  // Drop owned pets from the hunting set so a freshly-obtained pet
+  // silently falls out of rotation instead of lingering as a ghost entry.
+  let changed = false;
+  pets.forEach(function (p) {
+    if (p.owned && huntingSet.has(p.name)) { huntingSet.delete(p.name); changed = true; }
+  });
+  if (changed) saveHunting();
+}
+
+/* ---------------------------------------------------------------------
+ * Wise Old Man live fetch (item 1 of the 2026-09-05 spec refinement).
+ * WOM sends Access-Control-Allow-Origin: * on these endpoints, so a
+ * fetch() from a file:// page works without a server in between
+ * (verified live 2026-09-05; see README).
+ * ------------------------------------------------------------------- */
+const WOM_BASE = "https://api.wiseoldman.net/v2";
+
+async function fetchWomRates(force) {
+  if (!force && womRates && (Date.now() - Date.parse(womRates.fetched_at)) < WOM_STALE_MS) {
+    return womRates; // still fresh, avoid hammering the API on every click
+  }
+  const res = await fetch(WOM_BASE + "/efficiency/rates?metric=ehb&type=main");
+  if (!res.ok) throw new Error("WOM efficiency rates request failed (HTTP " + res.status + ")");
+  const rows = await res.json();
+  const rates = {};
+  rows.forEach(function (row) { rates[row.boss] = row.rate; });
+  womRates = { fetched_at: new Date().toISOString(), rates: rates };
+  saveWomRates();
+  return womRates;
+}
+
+async function fetchWomPlayer(name) {
+  const res = await fetch(WOM_BASE + "/players/" + encodeURIComponent(name));
+  if (res.status === 404) throw new Error("Player not found on Wise Old Man: " + name);
+  if (!res.ok) throw new Error("WOM player request failed (HTTP " + res.status + ")");
+  const player = await res.json();
+  const bosses = {};
+  const snap = player.latestSnapshot && player.latestSnapshot.data && player.latestSnapshot.data.bosses;
+  if (snap) {
+    Object.keys(snap).forEach(function (metric) { bosses[metric] = snap[metric].kills; });
+  }
+  womPlayer = { fetched_at: new Date().toISOString(), bosses: bosses };
+  saveWomPlayer();
+  return womPlayer;
+}
+
+function formatAge(iso) {
+  if (!iso) return null;
+  const ms = Date.now() - Date.parse(iso);
+  if (Number.isNaN(ms)) return null;
+  const mins = ms / 60000;
+  if (mins < 1) return "just now";
+  if (mins < 60) return Math.round(mins) + " min ago";
+  const hours = mins / 60;
+  if (hours < 48) return hours.toFixed(1) + "h ago";
+  return Math.round(hours / 24) + "d ago";
+}
+
+function renderWomStaleness() {
+  const el = document.getElementById("wom-staleness");
+  const parts = [];
+  if (womRates) {
+    const age = formatAge(womRates.fetched_at);
+    parts.push("Kill-rate table: " + age + (Date.now() - Date.parse(womRates.fetched_at) > WOM_STALE_MS ? " (stale, will refresh on next fetch)" : ""));
+  }
+  if (womPlayer) {
+    parts.push("Player KC: " + formatAge(womPlayer.fetched_at));
+  }
+  el.textContent = parts.join(" • ");
+}
+
+document.getElementById("rsn-input").addEventListener("change", function (ev) {
+  switchAccount(ev.target.value.trim());
+});
+
+document.getElementById("fetch-wom-btn").addEventListener("click", async function () {
+  const input = document.getElementById("rsn-input");
+  const name = input.value.trim();
+  const statusEl = document.getElementById("wom-status");
+  if (!name) { statusEl.textContent = "Enter an RSN first."; return; }
+  if (name !== rsn) switchAccount(name);
+  statusEl.textContent = "Fetching…";
+  try {
+    await Promise.all([fetchWomRates(false), fetchWomPlayer(name)]);
+    recomputePets();
+    render();
+    statusEl.textContent = "Loaded live data for " + name + ".";
+  } catch (err) {
+    statusEl.textContent = "Fetch failed: " + err.message;
+  }
+});
+
+/* ---------------------------------------------------------------------
+ * Snapshot loading (file input + paste box) -- optional fallback for KC
+ * on activities WOM doesn't track under a matching metric.
+ * ------------------------------------------------------------------- */
+function applySnapshot(json, statusEl) {
+  if (!json || typeof json !== "object" || !Array.isArray(json.pets)) {
+    if (statusEl) statusEl.textContent = "That doesn't look like a pet_ranker.py snapshot.";
+    return;
+  }
+  if (json.rsn && json.rsn !== rsn) switchAccount(json.rsn);
+  snapshot = json;
+  saveSnapshot();
+  recomputePets();
+  render();
+  if (statusEl) statusEl.textContent = "Loaded snapshot for " + (json.rsn || "unknown player") + ".";
+}
+
+document.getElementById("snapshot-file").addEventListener("change", function (ev) {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById("snapshot-status");
+  const reader = new FileReader();
+  reader.onload = function () {
+    try {
+      applySnapshot(JSON.parse(reader.result), statusEl);
+    } catch (err) {
+      statusEl.textContent = "Could not parse that file as JSON.";
+    }
+  };
+  reader.onerror = function () { statusEl.textContent = "Could not read that file."; };
+  reader.readAsText(file);
+});
+
+document.getElementById("apply-paste-btn").addEventListener("click", function () {
+  const statusEl = document.getElementById("snapshot-status");
+  const text = document.getElementById("snapshot-paste").value.trim();
+  if (!text) { statusEl.textContent = "Paste some snapshot JSON first."; return; }
+  try {
+    applySnapshot(JSON.parse(text), statusEl);
+  } catch (err) {
+    statusEl.textContent = "Could not parse that as JSON.";
+  }
+});
+
+document.getElementById("clear-snapshot-btn").addEventListener("click", function () {
+  snapshot = null;
+  saveSnapshot();
+  recomputePets();
+  render();
+  document.getElementById("snapshot-status").textContent = "Snapshot cleared.";
+});
+
+/* ---------------------------------------------------------------------
+ * Hunt list rendering
+ * ------------------------------------------------------------------- */
+function unownedPetsSorted() {
+  return pets.filter(function (p) { return !p.owned; })
+             .sort(function (a, b) { return a.expectedHours - b.expectedHours || a.name.localeCompare(b.name); });
+}
+
+function renderHuntTable() {
+  const body = document.getElementById("hunt-table-body");
+  body.innerHTML = "";
+  const rows = unownedPetsSorted();
+  rows.forEach(function (p) {
+    const tr = document.createElement("tr");
+
+    const tdCheck = document.createElement("td");
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = huntingSet.has(p.name);
+    cb.addEventListener("change", function () {
+      if (cb.checked) huntingSet.add(p.name); else huntingSet.delete(p.name);
+      saveHunting();
+      renderHuntingCount();
+      drawWheel();
+    });
+    tdCheck.appendChild(cb);
+
+    const tdName = document.createElement("td");
+    const link = document.createElement("a");
+    link.href = p.wikiUrl || "#";
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = p.name;
+    tdName.appendChild(link);
+
+    const tdSource = document.createElement("td");
+    tdSource.textContent = p.source;
+    tdSource.className = "muted";
+
+    const tdRate = document.createElement("td");
+    tdRate.className = "num" + (p.assumed ? " assumed" : "");
+    tdRate.textContent = "1/" + p.rarity;
+
+    const tdHours = document.createElement("td");
+    tdHours.className = "num";
+    tdHours.textContent = p.expectedHours.toFixed(1);
+
+    const tdKc = document.createElement("td");
+    tdKc.className = "num";
+    tdKc.textContent = p.kc === null ? "?" : p.kc.toLocaleString();
+    if (p.kc !== null) tdKc.title = "source: " + p.kcSource;
+
+    const tdChance = document.createElement("td");
+    tdChance.className = "num";
+    tdChance.textContent = (p.chance * 100).toFixed(1) + "%";
+
+    const tdDry = document.createElement("td");
+    tdDry.className = "num";
+    tdDry.textContent = (p.dryChance * 100).toFixed(1) + "%";
+
+    const tdBoost = document.createElement("td");
+    const boostSelect = document.createElement("select");
+    [0.5, 1, 2].forEach(function (value) {
+      const opt = document.createElement("option");
+      opt.value = String(value);
+      opt.textContent = value === 0.5 ? "0.5x" : value === 1 ? "1x" : "2x";
+      if (p.boost === value) opt.selected = true;
+      boostSelect.appendChild(opt);
+    });
+    boostSelect.addEventListener("change", function () {
+      const value = Number(boostSelect.value);
+      if (value === 1) delete boosts[p.name]; else boosts[p.name] = value;
+      saveBoosts();
+      recomputePets();
+      renderHuntTable();
+      drawWheel();
+    });
+    tdBoost.appendChild(boostSelect);
+
+    tr.append(tdCheck, tdName, tdSource, tdRate, tdHours, tdKc, tdChance, tdDry, tdBoost);
+    body.appendChild(tr);
+  });
+}
+
+function renderHuntingCount() {
+  document.getElementById("hunting-count").textContent = String(activeHuntingPets().length);
+}
+
+function activeHuntingPets() {
+  return pets.filter(function (p) { return !p.owned && huntingSet.has(p.name); });
+}
+
+document.getElementById("select-top8-btn").addEventListener("click", function () {
+  huntingSet = new Set(unownedPetsSorted().slice(0, 8).map(function (p) { return p.name; }));
+  saveHunting();
+  render();
+});
+
+/* ---------------------------------------------------------------------
+ * Wheel weighting + drawing
+ *
+ * Weight formula (2026-09-05 refinement):
+ *   H  = expectedHours(p)
+ *   w  = 1 / (H + H0) ^ k         H0 = 3.0h softening constant, k = 0.75
+ *   w  = clamp(w, wMax / R, wMax) R = 25 -- caps the odds spread at 25:1
+ *                                    so even Skotos-tier pets keep a slice
+ *   w  = w * boost(p)             0.5x / 1x / 2x, user-set per pet
+ *
+ * H0 stops any single sub-hour pet from swallowing the wheel; k < 1
+ * favours quick pets without making a 10x-slower pet 10x less likely;
+ * the 25:1 clamp is applied AFTER ranking by raw weight so the fastest
+ * hunted pet sets wMax and everything else is floored relative to it.
+ * boost is a pure user dial and never affects P(dry)/chance displays.
+ * ------------------------------------------------------------------- */
+const WEIGHT_H0 = 3.0;
+const WEIGHT_K = 0.75;
+const WEIGHT_MAX_SPREAD = 25;
+
+function computeWeightedSlices(huntedPets) {
+  if (huntedPets.length === 0) return [];
+  const raw = huntedPets.map(function (p) { return 1 / Math.pow(p.expectedHours + WEIGHT_H0, WEIGHT_K); });
+  const wMax = Math.max.apply(null, raw);
+  const wFloor = wMax / WEIGHT_MAX_SPREAD;
+  const weights = huntedPets.map(function (p, i) { return Math.max(raw[i], wFloor) * p.boost; });
+  const total = weights.reduce(function (a, b) { return a + b; }, 0);
+
+  let angle = 0;
+  return huntedPets.map(function (p, i) {
+    const span = (weights[i] / total) * Math.PI * 2;
+    const slice = { pet: p, weight: weights[i], probability: weights[i] / total, start: angle, end: angle + span, color: colorForPet(p.name) };
+    angle += span;
+    return slice;
+  });
+}
+
+function colorForPet(name) {
+  // Deterministic hash -> hue so a given pet always gets the same slice
+  // color across re-renders, restricted to warm/earthy hues for an
+  // OSRS-ish palette instead of a full rainbow.
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) { hash = (hash * 31 + name.charCodeAt(i)) >>> 0; }
+  const hues = [38, 28, 48, 95, 150, 175, 15, 340, 60, 200];
+  const hue = hues[hash % hues.length];
+  const light = 32 + (hash % 5) * 5;
+  return "hsl(" + hue + ", 45%, " + light + "%)";
+}
+
+function drawWheel() {
+  currentWheelSlices = computeWeightedSlices(activeHuntingPets());
+  const canvas = document.getElementById("wheel-canvas");
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width, h = canvas.height;
+  const cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2 - 4;
+
+  ctx.clearRect(0, 0, w, h);
+
+  if (currentWheelSlices.length === 0) {
+    ctx.fillStyle = "#2a2117";
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#a8987d";
+    ctx.font = "14px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("Select pets to hunt", cx, cy - 8);
+    ctx.fillText("in the list on the left", cx, cy + 10);
+    return;
+  }
+
+  currentWheelSlices.forEach(function (slice) {
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, slice.start, slice.end);
+    ctx.closePath();
+    ctx.fillStyle = slice.color;
+    ctx.fill();
+    ctx.strokeStyle = "#14110d";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    const mid = (slice.start + slice.end) / 2;
+    ctx.save();
+    ctx.translate(cx + Math.cos(mid) * r * 0.62, cy + Math.sin(mid) * r * 0.62);
+    ctx.rotate(mid + Math.PI / 2);
+    ctx.fillStyle = "#14110d";
+    ctx.font = "bold 11px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const label = slice.pet.name.length > 14 ? slice.pet.name.slice(0, 13) + "…" : slice.pet.name;
+    ctx.fillText(label, 0, 0);
+    ctx.restore();
+  });
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.strokeStyle = "#40331f";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+/* ---------------------------------------------------------------------
+ * Spin: pick the weighted-random winner FIRST (deterministic outcome),
+ * then animate the wheel to visually land on it with an ease-out curve.
+ * ------------------------------------------------------------------- */
+const POINTER_ANGLE = -Math.PI / 2; // pointer is fixed at the top (12 o'clock) of the wheel
+
+function pickWeightedWinner(slices) {
+  const roll = Math.random() * slices.reduce(function (sum, s) { return sum + s.weight; }, 0);
+  let acc = 0;
+  for (const slice of slices) {
+    acc += slice.weight;
+    if (roll <= acc) return slice;
+  }
+  return slices[slices.length - 1];
+}
+
+function normalizeAngle(a) {
+  const twoPi = Math.PI * 2;
+  return ((a % twoPi) + twoPi) % twoPi;
+}
+
+function spin() {
+  if (isSpinning) return;
+  const slices = computeWeightedSlices(activeHuntingPets());
+  if (slices.length === 0) {
+    document.getElementById("snapshot-status").textContent = "";
+    alert("Select at least one pet to hunt before spinning.");
+    return;
+  }
+  isSpinning = true;
+  document.getElementById("spin-btn").disabled = true;
+
+  const winnerSlice = pickWeightedWinner(slices);
+  const winnerMid = (winnerSlice.start + winnerSlice.end) / 2;
+
+  // Rotation needed so that (winnerMid + rotation) lands exactly on the pointer.
+  const requiredAlignment = normalizeAngle(POINTER_ANGLE - winnerMid);
+  const currentMod = normalizeAngle(wheelRotation);
+  const deltaToAlign = normalizeAngle(requiredAlignment - currentMod);
+  const extraSpins = 5 + Math.floor(Math.random() * 4); // 5-8 full turns, purely cosmetic
+  const totalDelta = deltaToAlign + extraSpins * Math.PI * 2;
+
+  const startRotation = wheelRotation;
+  const endRotation = startRotation + totalDelta;
+  const duration = 4200; // ms
+  const canvas = document.getElementById("wheel-canvas");
+  const startTime = performance.now();
+
+  function frame(now) {
+    const t = Math.min(1, (now - startTime) / duration);
+    const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
+    const rotation = startRotation + totalDelta * eased;
+    canvas.style.transform = "rotate(" + rotation + "rad)";
+    if (t < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      wheelRotation = normalizeAngle(endRotation);
+      canvas.style.transform = "rotate(" + wheelRotation + "rad)";
+      isSpinning = false;
+      document.getElementById("spin-btn").disabled = false;
+      onSpinComplete(winnerSlice.pet);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---------------------------------------------------------------------
+ * KC chunk sizing (2026-09-05 refinement).
+ *
+ * raw   = sessionMinutes / minutesPerAttempt(pet)   -- attempts that fit
+ *         in one session before any rounding.
+ * chunk = snap raw to the nearest value in CHUNK_STEPS, a fixed "nice
+ *         number" ladder (1,2,3,5,10,15,...,750) so the target reads
+ *         like a real grind ("do 25 kills") instead of "do 23.4 kills".
+ * chunk = clamp(chunk, 1, 750)          -- never 0 kills, never absurd
+ * chunk = min(chunk, 2 * rarity)        -- never ask for more than two
+ *                                           full expected drop cycles
+ * Reroll adds +-15% jitter to `raw` before snapping so hitting "reroll"
+ * doesn't just print the same number back.
+ * ------------------------------------------------------------------- */
+function snapToNiceStep(raw) {
+  let best = CHUNK_STEPS[0];
+  let bestDiff = Math.abs(raw - best);
+  for (const step of CHUNK_STEPS) {
+    const diff = Math.abs(raw - step);
+    if (diff < bestDiff) { best = step; bestDiff = diff; }
+  }
+  return best;
+}
+
+function computeChunk(pet, jitter) {
+  let raw = sessionMinutes / pet.minutesPerAttempt;
+  if (jitter) raw *= 0.85 + Math.random() * 0.3; // +-15%
+  let count = snapToNiceStep(raw);
+  count = Math.max(CHUNK_MIN, Math.min(CHUNK_MAX, count));
+  count = Math.min(count, 2 * pet.rarity);
+  const minutes = Math.round(count * pet.minutesPerAttempt);
+  const chanceThisSession = 1 - Math.pow(1 - 1 / pet.rarity, count);
+  return { count: count, minutes: minutes, chanceThisSession: chanceThisSession };
+}
+
+function onSpinComplete(pet) {
+  const chunk = computeChunk(pet, false);
+  pendingResult = { pet: pet, chunk: chunk };
+  showResult(pet, chunk);
+
+  history.unshift({
+    pet: pet.name,
+    source: pet.source,
+    wikiUrl: pet.wikiUrl,
+    chunk: chunk.count,
+    minutes: chunk.minutes,
+    timestamp: new Date().toISOString(),
+    done: false
+  });
+  history = history.slice(0, HISTORY_LIMIT);
+  saveHistory();
+  renderHistory();
+}
+
+function showResult(pet, chunk) {
+  document.getElementById("result-name").textContent = pet.name;
+  document.getElementById("result-source").textContent = pet.source + " • 1/" + pet.rarity + (pet.assumed ? " (assumed rate)" : "");
+  const wikiEl = document.getElementById("result-wiki");
+  wikiEl.innerHTML = "";
+  if (pet.wikiUrl) {
+    const a = document.createElement("a");
+    a.href = pet.wikiUrl;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.textContent = "Wiki page";
+    wikiEl.appendChild(a);
+  }
+  document.getElementById("result-chunk").textContent = chunk.count.toLocaleString();
+  document.getElementById("result-minutes").textContent = chunk.minutes.toLocaleString();
+  document.getElementById("result-chance-session").textContent =
+    "P(pet this session) ≈ " + (chunk.chanceThisSession * 100).toFixed(1) + "%";
+  document.getElementById("result-card").classList.add("show");
+}
+
+document.getElementById("reroll-chunk-btn").addEventListener("click", function () {
+  if (!pendingResult) return;
+  const chunk = computeChunk(pendingResult.pet, true);
+  pendingResult.chunk = chunk;
+  showResult(pendingResult.pet, chunk);
+  if (history.length > 0 && history[0].pet === pendingResult.pet.name) {
+    history[0].chunk = chunk.count;
+    history[0].minutes = chunk.minutes;
+    saveHistory();
+    renderHistory();
+  }
+});
+
+document.getElementById("spin-btn").addEventListener("click", spin);
+
+document.addEventListener("keydown", function (ev) {
+  if (ev.code !== "Space") return;
+  const tag = (ev.target && ev.target.tagName) || "";
+  if (tag === "INPUT" || tag === "TEXTAREA") return;
+  ev.preventDefault();
+  spin();
+});
+
+/* ---------------------------------------------------------------------
+ * History
+ * ------------------------------------------------------------------- */
+function renderHistory() {
+  const list = document.getElementById("history-list");
+  const empty = document.getElementById("history-empty");
+  list.innerHTML = "";
+  empty.style.display = history.length === 0 ? "block" : "none";
+
+  history.forEach(function (entry, index) {
+    const row = document.createElement("div");
+    row.className = "history-item" + (entry.done ? " done" : "");
+
+    const left = document.createElement("div");
+    const when = new Date(entry.timestamp);
+    left.innerHTML = '<span class="pet">' + escapeHtml(entry.pet) + "</span> "
+      + '<span class="muted">' + escapeHtml(entry.source) + " • " + entry.chunk + " kills (≈" + entry.minutes + " min) • "
+      + when.toLocaleString() + "</span>";
+
+    const right = document.createElement("label");
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = !!entry.done;
+    cb.addEventListener("change", function () {
+      history[index].done = cb.checked;
+      saveHistory();
+      renderHistory();
+    });
+    right.appendChild(cb);
+    right.appendChild(document.createTextNode("done"));
+
+    row.append(left, right);
+    list.appendChild(row);
+  });
+}
+
+function escapeHtml(s) {
+  const div = document.createElement("div");
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+/* ---------------------------------------------------------------------
+ * Session minutes input
+ * ------------------------------------------------------------------- */
+const sessionInput = document.getElementById("session-minutes");
+sessionInput.addEventListener("change", function () {
+  const v = Number(sessionInput.value);
+  sessionMinutes = Number.isFinite(v) && v > 0 ? v : 60;
+  sessionInput.value = String(sessionMinutes);
+  saveSessionMinutes();
+});
+
+/* ---------------------------------------------------------------------
+ * Export / Import all state
+ * ------------------------------------------------------------------- */
+document.getElementById("export-btn").addEventListener("click", function () {
+  const dump = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.indexOf(LS_PREFIX) === 0) {
+      try { dump[key] = JSON.parse(localStorage.getItem(key)); }
+      catch (err) { dump[key] = localStorage.getItem(key); }
+    }
+  }
+  const blob = new Blob([JSON.stringify(dump, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "pet-wheel-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById("import-btn").addEventListener("click", function () {
+  const statusEl = document.getElementById("backup-status");
+  const file = document.getElementById("import-file").files[0];
+  if (!file) { statusEl.textContent = "Choose a backup file first."; return; }
+  const reader = new FileReader();
+  reader.onload = function () {
+    try {
+      const dump = JSON.parse(reader.result);
+      Object.keys(dump).forEach(function (key) {
+        if (key.indexOf(LS_PREFIX) === 0) {
+          const val = dump[key];
+          lsSet(key, typeof val === "string" ? val : JSON.stringify(val));
+        }
+      });
+      loadState();
+      recomputePets();
+      render();
+      statusEl.textContent = "Import complete.";
+    } catch (err) {
+      statusEl.textContent = "Could not parse that backup file.";
+    }
+  };
+  reader.readAsText(file);
+});
+
+/* ---------------------------------------------------------------------
+ * Top-level render
+ * ------------------------------------------------------------------- */
+function render() {
+  document.getElementById("rsn-label").textContent = rsn ? rsn : "no player set";
+  document.getElementById("rsn-input").value = rsn;
+  renderWomStaleness();
+  sessionInput.value = String(sessionMinutes);
+  renderHuntTable();
+  renderHuntingCount();
+  drawWheel();
+  renderHistory();
+}
+
+loadState();
+recomputePets();
+render();
+</script>
+</body>
+</html>
