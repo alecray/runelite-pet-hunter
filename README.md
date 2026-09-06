@@ -151,6 +151,71 @@ code follows RuneLite conventions; run the hub's verification template against i
 PR. No third-party dependencies are used (Gson ships with RuneLite), so no Gradle
 verification-metadata changes are required.
 
+## Pet wheel (web/)
+
+`web/pet-wheel.html` is a single self-contained page (no build step, no server) for randomly
+picking which pet to hunt next and sizing a KC "chunk" for one session, using the same rarity/time
+data as `pet_ranker.py`.
+
+### Opening it
+
+Double-click `web/pet-wheel.html`, or open it via File > Open in any modern browser. It works
+entirely offline; only the optional live-fetch feature below makes a network request.
+
+### Getting live KC / kill-rate data
+
+- Enter your RSN in the "Player" box and click **Fetch from Wise Old Man**. This calls the public
+  [Wise Old Man](https://wiseoldman.net) API directly from the page (its `/players/{name}` and
+  `/efficiency/rates` endpoints send `Access-Control-Allow-Origin: *`, so a `file://` page can call
+  them without a server in between) to pull your boss KC and community-average kills/hour, which
+  replace the wheel's hardcoded per-kill time estimate where available.
+- Wise Old Man has **no concept of pet ownership** — it only knows KC. Every pet stays in the hunt
+  list; uncheck the ones you already own.
+- Optionally, also run `python pet_ranker.py --rsn "your name" --json snapshot.json` and load that
+  file (see the "Advanced" section on the page) as a KC fallback for the handful of activities Wise
+  Old Man doesn't track under a matching boss metric (Guardians of the Rift, Wintertodt, Zalcano,
+  Tempoross). `pet_ranker.py` no longer queries WikiSync for ownership: that endpoint rejects
+  third-party callers (`403 Please do not use WikiSync in your own projects`, confirmed live
+  2026-09-05), so `--json` snapshots always report `ownership_known: false` now.
+
+### What's persisted, and where
+
+Everything lives in the browser's `localStorage` for that page, namespaced per RSN so multiple
+accounts don't overwrite each other's data. Nothing is sent anywhere except the two Wise Old Man
+requests above:
+
+- Current RSN, and the (shared, not per-account) Wise Old Man kill-rate cache.
+- Per RSN: cached Wise Old Man player KC, an optional loaded `pet_ranker.py` snapshot, hunt-list
+  checkbox selections, per-pet boost multipliers, the session-length setting, and the last 20 spins.
+
+Use the **Export/Import** buttons in the "Backup" panel to save or restore all of this as one JSON
+file (for example, before clearing browser data).
+
+### Regenerating the embedded pet dataset
+
+`web/pet-wheel.html` embeds a merged pet dataset (rarity, time estimate, wiki link, Wise Old Man
+metric) built from `pets.json` and `pet_ranker.py`'s `PETS` tuple. After editing either source,
+regenerate it with:
+
+```
+python web/build_pet_data.py
+```
+
+It only includes pets present in both sources, since only `pet_ranker.py` supplies a timing
+estimate — pure skilling/milestone pets are intentionally left out until it grows one; the script
+prints what it skipped.
+
+### Known gaps
+
+- No live ownership source (see above) — ownership filtering exists in the code but is inert until
+  a legitimate replacement for WikiSync exists; the hunt list is managed by hand for now.
+- Wise Old Man reports `ehb: 0` (no kill-rate) for Guardians of the Rift, Wintertodt, Zalcano, and
+  Tempoross; those pets keep their hardcoded per-attempt time estimate.
+- `pets.json` still carries `itemId: 0` for several newer pets (Bran, Dom, Huberte, Moxi, Nid, Soup,
+  Yami); `web/build_pet_data.py` substitutes `pet_ranker.py`'s id where one exists.
+  `pets.json`'s previous Butch id (`28249`) conflicted with `pet_ranker.py`'s (`28248`); the OSRS
+  Wiki's Butch item infobox confirms `28248` is correct, and `pets.json` has been corrected to match.
+
 ## How pet detection works
 
 RuneLite has no API to read the whole collection log at once — data is only available while a
