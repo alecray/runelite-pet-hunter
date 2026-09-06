@@ -131,6 +131,12 @@
   footer{ color: var(--muted); font-size: 0.82em; margin-top: 18px; text-align:center; }
   .flex-1{ flex: 1 1 auto; }
   .hint{ font-size: 0.85em; color: var(--muted); }
+  .tab-btn{ background: var(--panel-2); color: var(--muted); border-color: var(--border); font-weight: 600; }
+  .tab-btn:hover{ background: #33291a; color: var(--text); }
+  .tab-btn.active{ background: var(--gold); color: var(--bg); border-color: var(--gold-dim); }
+  .unit-pill{ margin-left: 6px; }
+  #hunt-table-body input[type="number"]{ width: 64px; padding: 2px 4px; }
+  .reset-btn{ padding: 3px 8px; font-size: 0.85em; }
 </style>
 </head>
 <body>
@@ -173,10 +179,17 @@
 <div class="grid">
   <div class="panel">
     <h2>2. Hunt list</h2>
+    <div class="row" id="category-tabs" style="margin-bottom:8px;">
+      <button class="tab-btn" data-category="all">All</button>
+      <button class="tab-btn" data-category="boss">Bosses</button>
+      <button class="tab-btn" data-category="skilling">Skilling</button>
+      <button class="tab-btn" data-category="minigame">Minigame</button>
+    </div>
     <div class="row" style="margin-bottom:8px;">
       <button id="select-top8-btn">Select top 8 quickest</button>
-      <span class="hint"><span id="hunting-count">0</span> pet(s) selected for the wheel</span>
+      <span class="hint"><span id="hunting-count">0</span> pet(s) selected for the wheel (this tab)</span>
     </div>
+    <p class="hint">Skilling pets' rate and actions/hour are editable (defaults are the OSRS Wiki's fastest level-99 method) -- click into the fields and use Reset to restore the default.</p>
     <div class="tablewrap">
       <table>
         <thead>
@@ -185,11 +198,13 @@
             <th>Pet</th>
             <th>Source</th>
             <th class="num">1/rate</th>
+            <th class="num">Attempts/hr</th>
             <th class="num">Est. hours</th>
-            <th class="num">KC</th>
+            <th class="num">KC / Lvl</th>
             <th class="num">Chance so far</th>
             <th class="num">P(dry)</th>
             <th>Boost</th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="hunt-table-body"></tbody>
@@ -216,7 +231,7 @@
       <div class="muted" id="result-source"></div>
       <div id="result-wiki"></div>
       <div style="margin-top:6px;">
-        Do <strong id="result-chunk"></strong> kills/attempts
+        Do <strong id="result-chunk"></strong> <span id="result-unit"></span>
         <span class="muted">(&asymp; <span id="result-minutes"></span> min)</span>
       </div>
       <div class="muted" id="result-chance-session"></div>
@@ -252,613 +267,1255 @@
     "name": "Abyssal orphan",
     "source": "Abyssal Sire",
     "activity": "Abyssal Sire",
+    "category": "boss",
     "rarity": 2560,
     "minutes_per_attempt": 2.5,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 13262,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Abyssal_orphan",
     "type": "SOLO",
-    "wom": "abyssal_sire"
+    "wom": "abyssal_sire",
+    "womType": "boss"
   },
   {
     "name": "Abyssal protector",
     "source": "Guardians of the Rift",
     "activity": "Rifts closed",
-    "rarity": 500,
+    "category": "minigame",
+    "rarity": 4000,
     "minutes_per_attempt": 10.0,
-    "assumed": true,
+    "attemptUnit": "game",
+    "rollsPerAttempt": 8,
+    "assumedRate": true,
+    "methodNote": "Guardians of the Rift, per Rewards Guardian roll (wiki confirms 1/4,000). Rolls/game (8) is an inherited community estimate, not wiki-stated -- edit if you track your own rate. https://oldschool.runescape.wiki/w/Abyssal_protector",
+    "editable": false,
+    "womSkill": null,
     "item_id": 26901,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Abyssal_protector",
     "type": "BOTH",
-    "wom": null
+    "wom": null,
+    "womType": "boss"
+  },
+  {
+    "name": "Baby chinchompa",
+    "source": "Hunter",
+    "activity": null,
+    "category": "skilling",
+    "rarity": 80283,
+    "minutes_per_attempt": 0.075,
+    "attemptUnit": "action",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": "Black chinchompas via box trapping (OSRS Wiki: best pet odds among chinchompa colours at any level, though slower to catch than grey/red). Rate formula 1/(B - Lvl*25); black base 82,758 -> 1/80,283 at 99. ~800 catches/hr is an unverified estimate -- edit to your real rate. https://oldschool.runescape.wiki/w/Baby_chinchompa",
+    "editable": true,
+    "womSkill": "hunter",
+    "item_id": 13324,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Baby_chinchompa",
+    "type": "SOLO",
+    "wom": null,
+    "womType": "boss"
   },
   {
     "name": "Baron",
     "source": "Duke Sucellus",
     "activity": "Duke Sucellus",
+    "category": "boss",
     "rarity": 2500,
     "minutes_per_attempt": 2.5,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 28250,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Baron",
     "type": "SOLO",
-    "wom": "duke_sucellus"
+    "wom": "duke_sucellus",
+    "womType": "boss"
+  },
+  {
+    "name": "Beaver",
+    "source": "Woodcutting",
+    "activity": null,
+    "category": "skilling",
+    "rarity": 69846,
+    "minutes_per_attempt": 0.10507880910683012,
+    "attemptUnit": "action",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": "Ironwood trees, regular chopping (wiki: fastest method without tick manipulation). Base 1/72,321 -> 1/69,846 at 99. ~571 logs/hr assumes ~100,000 xp/hr (not confirmed ironwood-specific) / 175 xp per log -- edit to your real rate. https://oldschool.runescape.wiki/w/Beaver, https://oldschool.runescape.wiki/w/Ironwood_tree",
+    "editable": true,
+    "womSkill": "woodcutting",
+    "item_id": 13322,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Beaver",
+    "type": "SOLO",
+    "wom": null,
+    "womType": "boss"
   },
   {
     "name": "Beef",
     "source": "Brutus",
     "activity": "Brutus",
+    "category": "boss",
     "rarity": 1000,
     "minutes_per_attempt": 2.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 33124,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Beef",
     "type": "SOLO",
-    "wom": "brutus"
+    "wom": "brutus",
+    "womType": "boss"
+  },
+  {
+    "name": "Bloodhound",
+    "source": "Master Treasure Trails",
+    "activity": null,
+    "category": "minigame",
+    "rarity": 1000,
+    "minutes_per_attempt": 20.0,
+    "attemptUnit": "clue",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": "Master Treasure Trails completed (wiki confirms 1/1,000). Completion time varies hugely by clue; ~20 min/clue (3/hr) is a rough average, not wiki-stated. https://oldschool.runescape.wiki/w/Bloodhound",
+    "editable": false,
+    "womSkill": null,
+    "item_id": 19730,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Bloodhound",
+    "type": "SOLO",
+    "wom": "clue_scrolls_master",
+    "womType": "activity"
   },
   {
     "name": "Bran",
     "source": "The Royal Titans",
     "activity": "The Royal Titans",
+    "category": "boss",
     "rarity": 3000,
     "minutes_per_attempt": 3.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 30622,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Bran",
     "type": "BOTH",
-    "wom": "the_royal_titans"
+    "wom": "the_royal_titans",
+    "womType": "boss"
   },
   {
     "name": "Butch",
     "source": "Vardorvis",
     "activity": "Vardorvis",
+    "category": "boss",
     "rarity": 3000,
     "minutes_per_attempt": 2.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 28248,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Butch",
     "type": "SOLO",
-    "wom": "vardorvis"
+    "wom": "vardorvis",
+    "womType": "boss"
   },
   {
     "name": "Callisto cub",
     "source": "Artio",
     "activity": "Artio",
+    "category": "boss",
     "rarity": 2800,
     "minutes_per_attempt": 1.5,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 13178,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Callisto_cub",
     "type": "BOTH",
-    "wom": "artio"
+    "wom": "artio",
+    "womType": "boss"
+  },
+  {
+    "name": "Chompy chick",
+    "source": "Chompy bird hunting",
+    "activity": null,
+    "category": "minigame",
+    "rarity": 500,
+    "minutes_per_attempt": 0.21818181818181817,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": "Chompy bird kills after the Western Provinces elite diary, optimised setup (wiki: 200-350 kills/hour, 1/500 pet chance per kill; 275/hr is the range midpoint). https://oldschool.runescape.wiki/w/Chompy_bird_hunting",
+    "editable": false,
+    "womSkill": null,
+    "item_id": 13071,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Chompy_chick",
+    "type": "SOLO",
+    "wom": null,
+    "womType": "boss"
   },
   {
     "name": "Dom",
     "source": "Doom of Mokhaiotl (delve 6)",
     "activity": "Doom of Mokhaiotl",
+    "category": "boss",
     "rarity": 1000,
     "minutes_per_attempt": 12.0,
-    "assumed": true,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 31130,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Dom",
     "type": "SOLO",
-    "wom": "doom_of_mokhaiotl"
+    "wom": "doom_of_mokhaiotl",
+    "womType": "boss"
+  },
+  {
+    "name": "Giant squirrel",
+    "source": "Agility",
+    "activity": null,
+    "category": "skilling",
+    "rarity": 7841,
+    "minutes_per_attempt": 1.0909090909090908,
+    "attemptUnit": "action",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": "Penguin Agility Course laps (wiki: fastest method on average, ~142 hours / 7,841 laps expected). Rarity and rate both taken directly from that wiki-stated average. https://oldschool.runescape.wiki/w/Giant_squirrel",
+    "editable": true,
+    "womSkill": "agility",
+    "item_id": 20659,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Giant_squirrel",
+    "type": "SOLO",
+    "wom": null,
+    "womType": "boss"
   },
   {
     "name": "Hellpuppy",
     "source": "Cerberus",
     "activity": "Cerberus",
+    "category": "boss",
     "rarity": 3000,
     "minutes_per_attempt": 1.5,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 13247,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Hellpuppy",
     "type": "SOLO",
-    "wom": "cerberus"
+    "wom": "cerberus",
+    "womType": "boss"
+  },
+  {
+    "name": "Herbi",
+    "source": "Herbiboar",
+    "activity": null,
+    "category": "skilling",
+    "rarity": 6500,
+    "minutes_per_attempt": 0.96,
+    "attemptUnit": "action",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": "Herbiboar harvesting with stamina potions (wiki: 59-66 catches/hour). Flat 1/6,500 per catch, not level-scaled. https://oldschool.runescape.wiki/w/Herbi, https://oldschool.runescape.wiki/w/Herbiboar",
+    "editable": true,
+    "womSkill": "hunter",
+    "item_id": 21509,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Herbi",
+    "type": "SOLO",
+    "wom": null,
+    "womType": "boss"
+  },
+  {
+    "name": "Heron",
+    "source": "Fishing",
+    "activity": null,
+    "category": "skilling",
+    "rarity": 76174,
+    "minutes_per_attempt": 0.18461538461538463,
+    "attemptUnit": "action",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": "Anglerfish with diabolic worms (wiki: fastest standard method; 2-tick manipulation is faster but undocumented). Base 1/78,649 -> 1/76,174 at 99. ~325 catches/hr assumes 39,000 xp/hr / 120 xp per fish -- edit to your real rate. https://oldschool.runescape.wiki/w/Heron",
+    "editable": true,
+    "womSkill": "fishing",
+    "item_id": 13320,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Heron",
+    "type": "SOLO",
+    "wom": null,
+    "womType": "boss"
   },
   {
     "name": "Huberte",
     "source": "The Hueycoatl (MVP)",
     "activity": "The Hueycoatl",
+    "category": "boss",
     "rarity": 400,
     "minutes_per_attempt": 4.0,
-    "assumed": true,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": "The Hueycoatl, 1/400 base rate scaled by personal damage contribution (wiki-confirmed exact figure; MVP/top-damage is NOT required, just a minimum damage threshold). https://oldschool.runescape.wiki/w/Huberte",
+    "editable": false,
+    "womSkill": null,
     "item_id": 30152,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Huberte",
     "type": "BOTH",
-    "wom": "the_hueycoatl"
+    "wom": "the_hueycoatl",
+    "womType": "boss"
   },
   {
     "name": "Ikkle hydra",
     "source": "Alchemical Hydra",
     "activity": "Alchemical Hydra",
+    "category": "boss",
     "rarity": 3000,
     "minutes_per_attempt": 2.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 22746,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Ikkle_hydra",
     "type": "SOLO",
-    "wom": "alchemical_hydra"
+    "wom": "alchemical_hydra",
+    "womType": "boss"
   },
   {
     "name": "Jal-nib-rek",
     "source": "The Inferno",
     "activity": "TzKal-Zuk",
+    "category": "boss",
     "rarity": 100,
     "minutes_per_attempt": 90.0,
-    "assumed": true,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 21291,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Jal-nib-rek",
     "type": "SOLO",
-    "wom": "tzkal_zuk"
+    "wom": "tzkal_zuk",
+    "womType": "boss"
   },
   {
     "name": "Kalphite princess",
     "source": "Kalphite Queen",
     "activity": "Kalphite Queen",
+    "category": "boss",
     "rarity": 3000,
     "minutes_per_attempt": 2.5,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 12647,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Kalphite_princess",
     "type": "BOTH",
-    "wom": "kalphite_queen"
+    "wom": "kalphite_queen",
+    "womType": "boss"
+  },
+  {
+    "name": "Lil' creator",
+    "source": "Soul Wars",
+    "activity": null,
+    "category": "minigame",
+    "rarity": 400,
+    "minutes_per_attempt": 15.0,
+    "attemptUnit": "game",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": "Soul Wars games with sufficient Zeal (owner-set rate: 1/400/game; neither the Soul Wars nor Lil' creator wiki page states the pet odds or exact zeal threshold directly). Game length is wiki-confirmed at up to 15 minutes -> 4 games/hr. https://oldschool.runescape.wiki/w/Soul_Wars, https://oldschool.runescape.wiki/w/Lil'_creator",
+    "editable": false,
+    "womSkill": null,
+    "item_id": 25348,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Lil'_creator",
+    "type": "GROUP",
+    "wom": null,
+    "womType": "boss"
   },
   {
     "name": "Lil' zik",
     "source": "Theatre of Blood",
     "activity": "Theatre of Blood",
+    "category": "boss",
     "rarity": 650,
     "minutes_per_attempt": 20.0,
-    "assumed": true,
+    "attemptUnit": "raid",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": "Theatre of Blood monumental chest (wiki confirms the range 1/650-1/6,500, best case at 10 individual points, which is the figure used here). Hard Mode's improved range (1/500-1/5,000) was not added as a separate row -- treat this as the normal-mode best case. https://oldschool.runescape.wiki/w/Lil'_zik",
+    "editable": false,
+    "womSkill": null,
     "item_id": 22473,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Lil'_zik",
     "type": "GROUP",
-    "wom": "theatre_of_blood"
+    "wom": "theatre_of_blood",
+    "womType": "boss"
   },
   {
     "name": "Lil'viathan",
     "source": "The Leviathan",
     "activity": "The Leviathan",
+    "category": "boss",
     "rarity": 2500,
     "minutes_per_attempt": 2.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 28252,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Lil'viathan",
     "type": "SOLO",
-    "wom": "the_leviathan"
+    "wom": "the_leviathan",
+    "womType": "boss"
   },
   {
     "name": "Little nightmare",
     "source": "Phosani's Nightmare",
     "activity": "Phosani's Nightmare",
+    "category": "boss",
     "rarity": 1400,
     "minutes_per_attempt": 8.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 24491,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Little_nightmare",
     "type": "BOTH",
-    "wom": "phosanis_nightmare"
+    "wom": "phosanis_nightmare",
+    "womType": "boss"
   },
   {
     "name": "Moxi",
     "source": "Amoxliatl",
     "activity": "Amoxliatl",
+    "category": "boss",
     "rarity": 3000,
     "minutes_per_attempt": 1.5,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 30154,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Moxi",
     "type": "SOLO",
-    "wom": "amoxliatl"
+    "wom": "amoxliatl",
+    "womType": "boss"
   },
   {
     "name": "Muphin",
     "source": "Phantom Muspah",
     "activity": "Phantom Muspah",
+    "category": "boss",
     "rarity": 2500,
     "minutes_per_attempt": 3.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 27590,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Muphin",
     "type": "SOLO",
-    "wom": "phantom_muspah"
+    "wom": "phantom_muspah",
+    "womType": "boss"
   },
   {
     "name": "Nexling",
     "source": "Nex",
     "activity": "Nex",
+    "category": "boss",
     "rarity": 500,
     "minutes_per_attempt": 4.0,
-    "assumed": true,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 26348,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Nexling",
     "type": "GROUP",
-    "wom": "nex"
+    "wom": "nex",
+    "womType": "boss"
   },
   {
     "name": "Nid",
     "source": "Araxxor",
     "activity": "Araxxor",
+    "category": "boss",
     "rarity": 3000,
     "minutes_per_attempt": 2.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 29836,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Nid",
     "type": "BOTH",
-    "wom": "araxxor"
+    "wom": "araxxor",
+    "womType": "boss"
   },
   {
     "name": "Noon",
     "source": "Grotesque Guardians",
     "activity": "Grotesque Guardians",
+    "category": "boss",
     "rarity": 3000,
     "minutes_per_attempt": 3.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 21748,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Noon",
     "type": "SOLO",
-    "wom": "grotesque_guardians"
+    "wom": "grotesque_guardians",
+    "womType": "boss"
   },
   {
     "name": "Olmlet",
     "source": "Chambers of Xeric (30k pts)",
     "activity": "Chambers of Xeric",
+    "category": "boss",
     "rarity": 53,
     "minutes_per_attempt": 25.0,
-    "assumed": true,
+    "attemptUnit": "raid",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": "Chambers of Xeric, 1/53 per unique drop from the loot table (wiki-confirmed exact figure). Treated as ~1 unique-roll-equivalent per raid at ~30,000 points; the wiki doesn't state uniques-per-raid directly, so expected hours here are approximate. Challenge Mode's improved rate was not added as a separate row -- the wiki excerpts checked didn't give a clean, distinct CM denominator. https://oldschool.runescape.wiki/w/Olmlet",
+    "editable": false,
+    "womSkill": null,
     "item_id": 20851,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Olmlet",
     "type": "BOTH",
-    "wom": "chambers_of_xeric"
+    "wom": "chambers_of_xeric",
+    "womType": "boss"
   },
   {
     "name": "Pet chaos elemental",
     "source": "Chaos Elemental",
     "activity": "Chaos Elemental",
+    "category": "boss",
     "rarity": 300,
     "minutes_per_attempt": 2.5,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 11995,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_chaos_elemental",
     "type": "BOTH",
-    "wom": "chaos_elemental"
+    "wom": "chaos_elemental",
+    "womType": "boss"
   },
   {
     "name": "Pet dagannoth prime",
     "source": "Dagannoth Kings",
     "activity": "Dagannoth Prime",
+    "category": "boss",
     "rarity": 5000,
     "minutes_per_attempt": 1.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 12646,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_dagannoth_prime",
     "type": "BOTH",
-    "wom": "dagannoth_prime"
+    "wom": "dagannoth_prime",
+    "womType": "boss"
   },
   {
     "name": "Pet dagannoth rex",
     "source": "Dagannoth Kings",
     "activity": "Dagannoth Rex",
+    "category": "boss",
     "rarity": 5000,
     "minutes_per_attempt": 1.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 12645,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_dagannoth_rex",
     "type": "BOTH",
-    "wom": "dagannoth_rex"
+    "wom": "dagannoth_rex",
+    "womType": "boss"
   },
   {
     "name": "Pet dagannoth supreme",
     "source": "Dagannoth Kings",
     "activity": "Dagannoth Supreme",
+    "category": "boss",
     "rarity": 5000,
     "minutes_per_attempt": 1.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 12644,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_dagannoth_supreme",
     "type": "BOTH",
-    "wom": "dagannoth_supreme"
+    "wom": "dagannoth_supreme",
+    "womType": "boss"
   },
   {
     "name": "Pet dark core",
     "source": "Corporeal Beast",
     "activity": "Corporeal Beast",
+    "category": "boss",
     "rarity": 5000,
     "minutes_per_attempt": 4.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 12816,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_dark_core",
     "type": "BOTH",
-    "wom": "corporeal_beast"
+    "wom": "corporeal_beast",
+    "womType": "boss"
   },
   {
     "name": "Pet general graardor",
     "source": "General Graardor (Bandos GWD)",
     "activity": "General Graardor",
+    "category": "boss",
     "rarity": 5000,
     "minutes_per_attempt": 1.5,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 12650,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_general_graardor",
     "type": "BOTH",
-    "wom": "general_graardor"
+    "wom": "general_graardor",
+    "womType": "boss"
   },
   {
     "name": "Pet k'ril tsutsaroth",
     "source": "K'ril Tsutsaroth (Zamorak GWD)",
     "activity": "K'ril Tsutsaroth",
+    "category": "boss",
     "rarity": 5000,
     "minutes_per_attempt": 1.5,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 12652,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_k'ril_tsutsaroth",
     "type": "BOTH",
-    "wom": "kril_tsutsaroth"
+    "wom": "kril_tsutsaroth",
+    "womType": "boss"
   },
   {
     "name": "Pet kraken",
     "source": "Kraken",
     "activity": "Kraken",
+    "category": "boss",
     "rarity": 3000,
     "minutes_per_attempt": 1.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 12655,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_kraken",
     "type": "SOLO",
-    "wom": "kraken"
+    "wom": "kraken",
+    "womType": "boss"
   },
   {
     "name": "Pet kree'arra",
     "source": "Kree'arra (Armadyl GWD)",
     "activity": "Kree'Arra",
+    "category": "boss",
     "rarity": 5000,
     "minutes_per_attempt": 2.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 12649,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_kree'arra",
     "type": "BOTH",
-    "wom": "kreearra"
+    "wom": "kreearra",
+    "womType": "boss"
+  },
+  {
+    "name": "Pet penance queen",
+    "source": "Barbarian Assault",
+    "activity": null,
+    "category": "minigame",
+    "rarity": 1000,
+    "minutes_per_attempt": 3.0,
+    "attemptUnit": "action",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": "Barbarian Assault high-level gambles (wiki confirms 1/1,000 per high gamble). Gambles/hr depend on team role and coordination and aren't wiki-stated -- ~20/hr is a rough placeholder. https://oldschool.runescape.wiki/w/Barbarian_Assault, https://oldschool.runescape.wiki/w/Pet_penance_queen",
+    "editable": false,
+    "womSkill": null,
+    "item_id": 12703,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_penance_queen",
+    "type": "GROUP",
+    "wom": null,
+    "womType": "boss"
   },
   {
     "name": "Pet smoke devil",
     "source": "Thermonuclear Smoke Devil",
     "activity": "Thermonuclear Smoke Devil",
+    "category": "boss",
     "rarity": 3000,
     "minutes_per_attempt": 1.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 12648,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_smoke_devil",
     "type": "SOLO",
-    "wom": "thermonuclear_smoke_devil"
+    "wom": "thermonuclear_smoke_devil",
+    "womType": "boss"
   },
   {
     "name": "Pet snakeling",
     "source": "Zulrah",
     "activity": "Zulrah",
+    "category": "boss",
     "rarity": 4000,
     "minutes_per_attempt": 1.5,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 12921,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_snakeling",
     "type": "SOLO",
-    "wom": "zulrah"
+    "wom": "zulrah",
+    "womType": "boss"
   },
   {
     "name": "Pet zilyana",
     "source": "Commander Zilyana (Saradomin GWD)",
     "activity": "Commander Zilyana",
+    "category": "boss",
     "rarity": 5000,
     "minutes_per_attempt": 1.5,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 12651,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Pet_zilyana",
     "type": "BOTH",
-    "wom": "commander_zilyana"
+    "wom": "commander_zilyana",
+    "womType": "boss"
   },
   {
     "name": "Phoenix",
     "source": "Wintertodt (~2 crates/game)",
     "activity": "Wintertodt",
-    "rarity": 2500,
+    "category": "minigame",
+    "rarity": 5000,
     "minutes_per_attempt": 5.0,
-    "assumed": true,
+    "attemptUnit": "game",
+    "rollsPerAttempt": 2,
+    "assumedRate": true,
+    "methodNote": "Wintertodt supply crates (wiki: exchanging a full Pyromancer outfit for a crate gives 4 loot rolls, used here as a proxy for ~2 crates from a typical game). True per-crate rate and crates/game aren't both wiki-confirmed together -- treat as approximate. https://oldschool.runescape.wiki/w/Phoenix_(pet)",
+    "editable": false,
+    "womSkill": null,
     "item_id": 20693,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Phoenix_(pet)",
     "type": "BOTH",
-    "wom": null
+    "wom": null,
+    "womType": "boss"
   },
   {
     "name": "Prince black dragon",
     "source": "King Black Dragon",
     "activity": "King Black Dragon",
+    "category": "boss",
     "rarity": 3000,
     "minutes_per_attempt": 1.5,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 12653,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Prince_black_dragon",
     "type": "BOTH",
-    "wom": "king_black_dragon"
+    "wom": "king_black_dragon",
+    "womType": "boss"
+  },
+  {
+    "name": "Quetzin",
+    "source": "Hunters' Guild Rumours",
+    "activity": null,
+    "category": "skilling",
+    "rarity": 1000,
+    "minutes_per_attempt": 15.0,
+    "attemptUnit": "action",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": "Hunters' Guild rumours (owner-set rate: 1/1,000; the wiki page itself lists an ambiguous '1/1,000; 1/67' without clarifying which tier, so the owner's figure is authoritative). Rumours/hr isn't documented -- ~4/hr is a rough placeholder. https://oldschool.runescape.wiki/w/Quetzin",
+    "editable": true,
+    "womSkill": "hunter",
+    "item_id": 28477,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Quetzin",
+    "type": "SOLO",
+    "wom": null,
+    "womType": "boss"
+  },
+  {
+    "name": "Rift guardian",
+    "source": "Runecraft",
+    "activity": null,
+    "category": "skilling",
+    "rarity": 1793283,
+    "minutes_per_attempt": 0.00909090909090909,
+    "attemptUnit": "action",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": "Mind runes via Mind Altar Teleport + essence pouches (wiki: fastest method excluding runners). 'All other runes' base 1/1,795,758 -> 1/1,793,283 at 99. ~6,600 runes/hr assumes 30k-43k xp/hr / 5.5 xp per rune -- edit to your real rate. https://oldschool.runescape.wiki/w/Rift_guardian, https://oldschool.runescape.wiki/w/Mind_rune",
+    "editable": true,
+    "womSkill": "runecrafting",
+    "item_id": 20665,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Rift_guardian",
+    "type": "SOLO",
+    "wom": null,
+    "womType": "boss"
+  },
+  {
+    "name": "Rock golem",
+    "source": "Mining",
+    "activity": null,
+    "category": "skilling",
+    "rarity": 57525,
+    "minutes_per_attempt": 0.03,
+    "attemptUnit": "action",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": "Volcanic Mine ore fragments (wiki: only slightly slower than gem-rock mining for the pet, far better xp at 85k-95k/hr). Base 1/60,000 -> 1/57,525 at 99. ~2,000 fragments/hr is an unverified estimate (wiki gives xp/hr, not fragments/hr) -- edit to your real rate. https://oldschool.runescape.wiki/w/Rock_golem, https://oldschool.runescape.wiki/w/Volcanic_Mine",
+    "editable": true,
+    "womSkill": "mining",
+    "item_id": 13321,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Rock_golem",
+    "type": "SOLO",
+    "wom": null,
+    "womType": "boss"
+  },
+  {
+    "name": "Rocky",
+    "source": "Thieving",
+    "activity": null,
+    "category": "skilling",
+    "rarity": 254736,
+    "minutes_per_attempt": 0.06,
+    "attemptUnit": "action",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": "Wiki names market stalls (Rellekka/Prifddinas/Draynor) as fastest but doesn't give their base chance, so this uses the documented Man/Woman pickpocket rate: base 1/257,211 -> 1/254,736 at 99. ~1,000 steals/hr is an unverified estimate -- edit to your real rate. https://oldschool.runescape.wiki/w/Rocky",
+    "editable": true,
+    "womSkill": "thieving",
+    "item_id": 20663,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Rocky",
+    "type": "SOLO",
+    "wom": null,
+    "womType": "boss"
   },
   {
     "name": "Scorpia's offspring",
     "source": "Scorpia",
     "activity": "Scorpia",
+    "category": "boss",
     "rarity": 2016,
     "minutes_per_attempt": 1.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 13181,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Scorpia's_offspring",
     "type": "BOTH",
-    "wom": "scorpia"
+    "wom": "scorpia",
+    "womType": "boss"
   },
   {
     "name": "Scurry",
     "source": "Scurrius",
     "activity": "Scurrius",
+    "category": "boss",
     "rarity": 3000,
     "minutes_per_attempt": 1.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 28579,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Scurry",
     "type": "BOTH",
-    "wom": "scurrius"
+    "wom": "scurrius",
+    "womType": "boss"
   },
   {
     "name": "Skotos",
     "source": "Skotizo",
     "activity": "Skotizo",
+    "category": "boss",
     "rarity": 65,
     "minutes_per_attempt": 4.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 21273,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Skotos",
     "type": "SOLO",
-    "wom": "skotizo"
+    "wom": "skotizo",
+    "womType": "boss"
   },
   {
     "name": "Smol heredit",
     "source": "Sol Heredit",
     "activity": "Sol Heredit",
+    "category": "boss",
     "rarity": 200,
     "minutes_per_attempt": 35.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 29039,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Smol_heredit",
     "type": "SOLO",
-    "wom": "sol_heredit"
+    "wom": "sol_heredit",
+    "womType": "boss"
   },
   {
     "name": "Smolcano",
     "source": "Zalcano",
     "activity": "Zalcano",
+    "category": "minigame",
     "rarity": 2250,
     "minutes_per_attempt": 3.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": "Zalcano, static 1/2,250 per kill for any eligible player (wiki-confirmed exact figure, replacing the old 1/1,500-1/2,775 performance-scaled rate). Single roll per kill, not a multi-roll minigame mechanic. https://oldschool.runescape.wiki/w/Smolcano",
+    "editable": false,
+    "womSkill": null,
     "item_id": 23760,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Smolcano",
     "type": "GROUP",
-    "wom": null
+    "wom": null,
+    "womType": "boss"
+  },
+  {
+    "name": "Soup",
+    "source": "Sailing",
+    "activity": null,
+    "category": "skilling",
+    "rarity": 4691,
+    "minutes_per_attempt": 6.666666666666667,
+    "attemptUnit": "action",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": "Courier tasks between Aldarin and Sunset Coast (wiki: best odds, 1/4,691 per task; doesn't appear level-scaled). Tasks/hr isn't documented for this exact route -- ~9/hr borrows the Summer Shore route's stated pace as a rough proxy. https://oldschool.runescape.wiki/w/Soup, https://oldschool.runescape.wiki/w/Sailing_training",
+    "editable": true,
+    "womSkill": "sailing",
+    "item_id": 31283,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Soup",
+    "type": "SOLO",
+    "wom": null,
+    "womType": "boss"
   },
   {
     "name": "Sraracha",
     "source": "Sarachnis",
     "activity": "Sarachnis",
+    "category": "boss",
     "rarity": 3000,
     "minutes_per_attempt": 1.5,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 25838,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Sraracha",
     "type": "SOLO",
-    "wom": "sarachnis"
+    "wom": "sarachnis",
+    "womType": "boss"
+  },
+  {
+    "name": "Tangleroot",
+    "source": "Farming",
+    "activity": null,
+    "category": "skilling",
+    "rarity": 4525,
+    "minutes_per_attempt": 10.0,
+    "attemptUnit": "action",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": "Cactus patch check-health rolls (wiki: base 1/7,000 -> 1/4,525 at 99; mixing fast-growing patches beats tree-only runs, which the wiki says can take 'upwards of two years'). ~6 checks/hr is a rough placeholder -- farming's bottleneck is real-time growth, not clicks -- edit heavily. https://oldschool.runescape.wiki/w/Tangleroot",
+    "editable": true,
+    "womSkill": "farming",
+    "item_id": 20661,
+    "wikiUrl": "https://oldschool.runescape.wiki/w/Tangleroot",
+    "type": "SOLO",
+    "wom": null,
+    "womType": "boss"
   },
   {
     "name": "Tiny tempor",
     "source": "Tempoross (~5 permits/game)",
     "activity": "Tempoross",
-    "rarity": 1600,
+    "category": "minigame",
+    "rarity": 8000,
     "minutes_per_attempt": 10.0,
-    "assumed": true,
+    "attemptUnit": "game",
+    "rollsPerAttempt": 5,
+    "assumedRate": true,
+    "methodNote": "Tempoross reward permits (wiki: 1 permit per 2,000 points, +1 per 700 points beyond that). ~5 permits/game is an inherited community estimate for normal (non-Leagues) play, not wiki-stated for a typical game -- edit if you track your own rate. https://oldschool.runescape.wiki/w/Tiny_tempor",
+    "editable": false,
+    "womSkill": null,
     "item_id": 25602,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Tiny_tempor",
     "type": "BOTH",
-    "wom": null
+    "wom": null,
+    "womType": "boss"
   },
   {
     "name": "Tumeken's guardian",
     "source": "Tombs of Amascut (300, ~30k pts)",
     "activity": "Tombs of Amascut: Expert Mode",
+    "category": "boss",
     "rarity": 467,
     "minutes_per_attempt": 25.0,
-    "assumed": true,
+    "attemptUnit": "raid",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": "Tombs of Amascut reward chest (wiki confirms a chance exists, scaled by raid level/points, but not an exact 1/N or points-per-raid figure). Rarity/minutes here are an inherited community estimate for a ~30,000-point (300 raid level) run. Expert Mode's improved rate was not added as a separate row for the same reason as CM above. https://oldschool.runescape.wiki/w/Tumeken's_guardian",
+    "editable": false,
+    "womSkill": null,
     "item_id": 27352,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Tumeken's_guardian",
     "type": "BOTH",
-    "wom": "tombs_of_amascut_expert"
+    "wom": "tombs_of_amascut_expert",
+    "womType": "boss"
   },
   {
     "name": "Tzrek-jad",
     "source": "TzHaar Fight Cave",
     "activity": "TzTok-Jad",
+    "category": "boss",
     "rarity": 200,
     "minutes_per_attempt": 40.0,
-    "assumed": true,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": true,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 13225,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Tzrek-jad",
     "type": "SOLO",
-    "wom": "tztok_jad"
+    "wom": "tztok_jad",
+    "womType": "boss"
   },
   {
     "name": "Venenatis spiderling",
     "source": "Spindel",
     "activity": "Spindel",
+    "category": "boss",
     "rarity": 2800,
     "minutes_per_attempt": 1.5,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 13177,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Venenatis_spiderling",
     "type": "BOTH",
-    "wom": "spindel"
+    "wom": "spindel",
+    "womType": "boss"
   },
   {
     "name": "Vet'ion jr.",
     "source": "Calvar'ion",
     "activity": "Calvar'ion",
+    "category": "boss",
     "rarity": 2800,
     "minutes_per_attempt": 1.5,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 13179,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Vet'ion_jr.",
     "type": "BOTH",
-    "wom": "calvarion"
+    "wom": "calvarion",
+    "womType": "boss"
   },
   {
     "name": "Vorki",
     "source": "Vorkath",
     "activity": "Vorkath",
+    "category": "boss",
     "rarity": 3000,
     "minutes_per_attempt": 1.5,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 21992,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Vorki",
     "type": "SOLO",
-    "wom": "vorkath"
+    "wom": "vorkath",
+    "womType": "boss"
   },
   {
     "name": "Wisp",
     "source": "The Whisperer",
     "activity": "The Whisperer",
+    "category": "boss",
     "rarity": 2000,
     "minutes_per_attempt": 2.5,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 28246,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Wisp_(pet)",
     "type": "SOLO",
-    "wom": "the_whisperer"
+    "wom": "the_whisperer",
+    "womType": "boss"
   },
   {
     "name": "Yami",
     "source": "Yama",
     "activity": "Yama",
+    "category": "boss",
     "rarity": 2500,
     "minutes_per_attempt": 3.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 30888,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Yami",
     "type": "BOTH",
-    "wom": "yama"
+    "wom": "yama",
+    "womType": "boss"
   },
   {
     "name": "Youngllef",
     "source": "The Corrupted Gauntlet",
     "activity": "The Corrupted Gauntlet",
+    "category": "boss",
     "rarity": 800,
     "minutes_per_attempt": 10.0,
-    "assumed": false,
+    "attemptUnit": "kill",
+    "rollsPerAttempt": 1,
+    "assumedRate": false,
+    "methodNote": null,
+    "editable": false,
+    "womSkill": null,
     "item_id": 23757,
     "wikiUrl": "https://oldschool.runescape.wiki/w/Youngllef",
     "type": "SOLO",
-    "wom": "the_corrupted_gauntlet"
+    "wom": "the_corrupted_gauntlet",
+    "womType": "boss"
   }
 ]
 </script>
@@ -909,6 +1566,8 @@ let boosts = {};              // pet name -> 0.5 | 1 | 2 user weight multiplier
 let sessionMinutes = 90;
 let history = [];             // [{pet, source, wikiUrl, chunk, minutes, timestamp, done}]
 let pets = [];                // DEFAULT_PETS merged with WOM/snapshot kc + rates, recomputed on demand
+let activeCategory = "all";   // "all" | "boss" | "skilling" | "minigame" -- filter tab, also gates the wheel
+let overrides = {};           // pet name -> {rarity, minutesPerAttempt} user edits for skilling pets, persisted
 
 let isSpinning = false;
 let wheelRotation = 0;        // radians, accumulated across spins
@@ -961,6 +1620,12 @@ function loadState() {
   if (rawHistory) {
     try { history = JSON.parse(rawHistory); } catch (err) { history = []; }
   }
+  const rawCategory = lsGet(accountKey("category.v1"));
+  activeCategory = rawCategory || "all";
+  const rawOverrides = lsGet(accountKey("overrides.v1"));
+  if (rawOverrides) {
+    try { overrides = JSON.parse(rawOverrides); } catch (err) { overrides = {}; }
+  }
 }
 
 function saveCurrentRsn() { lsSet(LS_CURRENT_RSN, rsn); }
@@ -968,6 +1633,8 @@ function saveHunting() { lsSet(accountKey("hunting.v1"), JSON.stringify(Array.fr
 function saveBoosts() { lsSet(accountKey("boosts.v1"), JSON.stringify(boosts)); }
 function saveSessionMinutes() { lsSet(accountKey("sessionMinutes.v1"), String(sessionMinutes)); }
 function saveHistory() { lsSet(accountKey("history.v1"), JSON.stringify(history)); }
+function saveCategory() { lsSet(accountKey("category.v1"), activeCategory); }
+function saveOverrides() { lsSet(accountKey("overrides.v1"), JSON.stringify(overrides)); }
 function saveSnapshot() {
   if (snapshot) lsSet(accountKey("snapshot.v1"), JSON.stringify(snapshot));
   else lsRemove(accountKey("snapshot.v1"));
@@ -990,7 +1657,7 @@ function switchAccount(newRsn) {
   rsn = newRsn;
   saveCurrentRsn();
   snapshot = null; womPlayer = null; huntingSet = new Set(); boosts = {}; history = [];
-  sessionMinutes = 90;
+  sessionMinutes = 90; activeCategory = "all"; overrides = {};
   const rawSnapshot = lsGet(accountKey("snapshot.v1"));
   if (rawSnapshot) { try { snapshot = JSON.parse(rawSnapshot); } catch (err) { /* ignore */ } }
   const rawWomPlayer = lsGet(accountKey("womPlayer.v1"));
@@ -1003,6 +1670,10 @@ function switchAccount(newRsn) {
   if (rawMinutes && !Number.isNaN(Number(rawMinutes))) sessionMinutes = Math.max(1, Number(rawMinutes));
   const rawHistory = lsGet(accountKey("history.v1"));
   if (rawHistory) { try { history = JSON.parse(rawHistory); } catch (err) { /* ignore */ } }
+  const rawCategory = lsGet(accountKey("category.v1"));
+  if (rawCategory) activeCategory = rawCategory;
+  const rawOverrides = lsGet(accountKey("overrides.v1"));
+  if (rawOverrides) { try { overrides = JSON.parse(rawOverrides); } catch (err) { /* ignore */ } }
   recomputePets();
   render();
 }
@@ -1011,10 +1682,14 @@ function switchAccount(newRsn) {
  * Merge embedded pet dataset with live Wise Old Man data (preferred) and
  * the optional pet_ranker.py snapshot (fallback). Priority per field:
  *
- *   KC:      WOM player kills for pet.wom, if loaded and not -1 (unranked)
+ *   KC:      WOM player kills/score for pet.wom, if loaded and not -1
+ *            (unranked) -- looked up in womPlayer.bosses or .activities
+ *            depending on pet.womType
  *            -> else snapshot.kc[pet.activity] (hiscores), if loaded
  *            -> else null ("?" = truly unknown, never treated as 0)
- *   minutes: 60 / WOM efficiency rate for pet.wom, if loaded and rate > 0
+ *   minutes: 60 / WOM efficiency rate for pet.wom, if loaded, rate > 0,
+ *            and the pet isn't a user-editable skilling pet
+ *            -> else a user override (skilling pets only), if set
  *            -> else the hardcoded minutes_per_attempt estimate
  *
  * Ownership has no live source any more (WikiSync is off-limits, see
@@ -1022,44 +1697,67 @@ function switchAccount(newRsn) {
  * pet_ranker.py now always reports as ownership_known: false. In
  * practice every pet stays in the hunt list; the user unchecks ones
  * they already own.
+ *
+ * Roll-based pets (attemptUnit "game"/"raid"/"clue" with rollsPerAttempt
+ * > 1, or any pet where a single attempt buys more than one independent
+ * shot at the pet) fold rollsPerAttempt into every rate-derived number:
+ * expected hours, "chance so far", and P(dry) all treat one attempt as
+ * rollsPerAttempt independent 1/rarity rolls (2026-09-05 schema
+ * generalization -- see web/build_pet_data.py's module docstring).
  * ------------------------------------------------------------------- */
 function recomputePets() {
   const ownedIds = new Set((snapshot && snapshot.ownership_known) ? snapshot.owned_item_ids : []);
   const ownershipKnown = !!(snapshot && snapshot.ownership_known);
   const kcByActivity = (snapshot && snapshot.kc) ? snapshot.kc : {};
   const womBosses = (womPlayer && womPlayer.bosses) ? womPlayer.bosses : {};
+  const womActivities = (womPlayer && womPlayer.activities) ? womPlayer.activities : {};
+  const womSkills = (womPlayer && womPlayer.skills) ? womPlayer.skills : {};
   const rates = (womRates && womRates.rates) ? womRates.rates : {};
 
   pets = DEFAULT_PETS.map(function (p) {
     const owned = ownershipKnown && p.item_id > 0 && ownedIds.has(p.item_id);
+    const editable = p.category === "skilling";
+    const override = editable ? overrides[p.name] : null;
 
     let kc = null;
     let kcSource = "unknown";
-    if (p.wom && Object.prototype.hasOwnProperty.call(womBosses, p.wom) && womBosses[p.wom] !== -1) {
-      kc = womBosses[p.wom];
+    const womTable = p.womType === "activity" ? womActivities : womBosses;
+    if (p.wom && Object.prototype.hasOwnProperty.call(womTable, p.wom) && womTable[p.wom] !== -1) {
+      kc = womTable[p.wom];
       kcSource = "wom";
-    } else if (Object.prototype.hasOwnProperty.call(kcByActivity, p.activity)) {
+    } else if (p.activity && Object.prototype.hasOwnProperty.call(kcByActivity, p.activity)) {
       kc = kcByActivity[p.activity];
       kcSource = "hiscores";
     }
 
-    let minutesPerAttempt = p.minutes_per_attempt;
-    let rateSource = "default";
-    if (p.wom && Object.prototype.hasOwnProperty.call(rates, p.wom) && rates[p.wom] > 0) {
+    const skillLevel = p.womSkill && Object.prototype.hasOwnProperty.call(womSkills, p.womSkill)
+      ? womSkills[p.womSkill] : null;
+
+    let rarity = (override && override.rarity > 0) ? override.rarity : p.rarity;
+    let minutesPerAttempt = (override && override.minutesPerAttempt > 0) ? override.minutesPerAttempt : p.minutes_per_attempt;
+    let rateSource = override ? "user" : "default";
+    if (!editable && p.wom && p.womType !== "activity"
+        && Object.prototype.hasOwnProperty.call(rates, p.wom) && rates[p.wom] > 0) {
       minutesPerAttempt = 60 / rates[p.wom];
       rateSource = "wom";
     }
 
-    const expectedHours = (p.rarity * minutesPerAttempt) / 60;
+    const rollsPerAttempt = p.rollsPerAttempt || 1;
+    const expectedHours = (rarity * minutesPerAttempt) / 60 / rollsPerAttempt;
     const kcForMath = kc === null ? 0 : kc;
-    const chance = 1 - Math.pow(1 - 1 / p.rarity, kcForMath);      // "chance so far" you'd already have it
-    const dryChance = Math.pow(1 - 1 / p.rarity, kcForMath);        // P(dry so far) -- display only, never fed into weight
+    const rollsSoFar = kcForMath * rollsPerAttempt;
+    const chance = 1 - Math.pow(1 - 1 / rarity, rollsSoFar);       // "chance so far" you'd already have it
+    const dryChance = Math.pow(1 - 1 / rarity, rollsSoFar);        // P(dry so far) -- display only, never fed into weight
     const boost = boosts[p.name] || 1;
 
     return Object.assign({}, p, {
       owned: owned,
+      editable: editable,
       kc: kc,
       kcSource: kcSource,
+      skillLevel: skillLevel,
+      rarity: rarity,
+      rollsPerAttempt: rollsPerAttempt,
       minutesPerAttempt: minutesPerAttempt,
       rateSource: rateSource,
       expectedHours: expectedHours,
@@ -1106,11 +1804,25 @@ async function fetchWomPlayer(name) {
   if (!res.ok) throw new Error("WOM player request failed (HTTP " + res.status + ")");
   const player = await res.json();
   const bosses = {};
-  const snap = player.latestSnapshot && player.latestSnapshot.data && player.latestSnapshot.data.bosses;
-  if (snap) {
-    Object.keys(snap).forEach(function (metric) { bosses[metric] = snap[metric].kills; });
+  const activities = {};
+  const skills = {};
+  const data = player.latestSnapshot && player.latestSnapshot.data;
+  if (data && data.bosses) {
+    Object.keys(data.bosses).forEach(function (metric) { bosses[metric] = data.bosses[metric].kills; });
   }
-  womPlayer = { fetched_at: new Date().toISOString(), bosses: bosses };
+  // Activities cover non-boss KC-like counters WOM tracks (clue scrolls,
+  // Guardians of the Rift games, etc.) -- a separate namespace from
+  // .bosses, matched via pet.womType === "activity" in recomputePets().
+  if (data && data.activities) {
+    Object.keys(data.activities).forEach(function (metric) { activities[metric] = data.activities[metric].score; });
+  }
+  // Skill levels are informational only for skilling pets (shown in the
+  // KC/Lvl column) -- never fed into rate/chance math, which stays
+  // user-editable per the 2026-09-05 schema generalization.
+  if (data && data.skills) {
+    Object.keys(data.skills).forEach(function (metric) { skills[metric] = data.skills[metric].level; });
+  }
+  womPlayer = { fetched_at: new Date().toISOString(), bosses: bosses, activities: activities, skills: skills };
   saveWomPlayer();
   return womPlayer;
 }
@@ -1216,9 +1928,47 @@ document.getElementById("clear-snapshot-btn").addEventListener("click", function
 /* ---------------------------------------------------------------------
  * Hunt list rendering
  * ------------------------------------------------------------------- */
+const UNIT_LABEL = { kill: "kills", game: "games", action: "actions", clue: "clues", raid: "raids" };
+
+function matchesCategory(p) {
+  return activeCategory === "all" || p.category === activeCategory;
+}
+
 function unownedPetsSorted() {
-  return pets.filter(function (p) { return !p.owned; })
+  return pets.filter(function (p) { return !p.owned && matchesCategory(p); })
              .sort(function (a, b) { return a.expectedHours - b.expectedHours || a.name.localeCompare(b.name); });
+}
+
+function renderCategoryTabs() {
+  document.querySelectorAll("#category-tabs .tab-btn").forEach(function (btn) {
+    btn.classList.toggle("active", btn.dataset.category === activeCategory);
+  });
+}
+
+document.querySelectorAll("#category-tabs .tab-btn").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    activeCategory = btn.dataset.category;
+    saveCategory();
+    render();
+  });
+});
+
+function applyOverride(name, field, value) {
+  const current = overrides[name] || {};
+  current[field] = value;
+  overrides[name] = current;
+  saveOverrides();
+  recomputePets();
+  renderHuntTable();
+  drawWheel();
+}
+
+function resetOverride(name) {
+  delete overrides[name];
+  saveOverrides();
+  recomputePets();
+  renderHuntTable();
+  drawWheel();
 }
 
 function renderHuntTable() {
@@ -1251,10 +2001,47 @@ function renderHuntTable() {
     const tdSource = document.createElement("td");
     tdSource.textContent = p.source;
     tdSource.className = "muted";
+    if (p.methodNote) tdSource.title = p.methodNote;
+    if (p.attemptUnit && p.attemptUnit !== "kill") {
+      const pill = document.createElement("span");
+      pill.className = "pill unit-pill";
+      pill.textContent = "per " + p.attemptUnit;
+      tdSource.appendChild(pill);
+    }
 
     const tdRate = document.createElement("td");
-    tdRate.className = "num" + (p.assumed ? " assumed" : "");
-    tdRate.textContent = "1/" + p.rarity;
+    tdRate.className = "num" + (p.assumedRate ? " assumed" : "");
+    const tdAttemptsPerHour = document.createElement("td");
+    tdAttemptsPerHour.className = "num";
+    if (p.editable) {
+      const rateInput = document.createElement("input");
+      rateInput.type = "number";
+      rateInput.min = "1";
+      rateInput.step = "1";
+      rateInput.value = String(p.rarity);
+      rateInput.title = "1/N chance per attempt";
+      rateInput.addEventListener("change", function () {
+        const v = Math.round(Number(rateInput.value));
+        if (v > 0) applyOverride(p.name, "rarity", v);
+      });
+      tdRate.textContent = "1/";
+      tdRate.appendChild(rateInput);
+
+      const perHourInput = document.createElement("input");
+      perHourInput.type = "number";
+      perHourInput.min = "0.1";
+      perHourInput.step = "0.1";
+      perHourInput.value = (60 / p.minutesPerAttempt).toFixed(1);
+      perHourInput.title = "attempts per hour";
+      perHourInput.addEventListener("change", function () {
+        const v = Number(perHourInput.value);
+        if (v > 0) applyOverride(p.name, "minutesPerAttempt", 60 / v);
+      });
+      tdAttemptsPerHour.appendChild(perHourInput);
+    } else {
+      tdRate.textContent = "1/" + p.rarity;
+      tdAttemptsPerHour.textContent = (60 / p.minutesPerAttempt).toFixed(1);
+    }
 
     const tdHours = document.createElement("td");
     tdHours.className = "num";
@@ -1262,8 +2049,13 @@ function renderHuntTable() {
 
     const tdKc = document.createElement("td");
     tdKc.className = "num";
-    tdKc.textContent = p.kc === null ? "?" : p.kc.toLocaleString();
-    if (p.kc !== null) tdKc.title = "source: " + p.kcSource;
+    if (p.category === "skilling") {
+      tdKc.textContent = p.skillLevel === null ? "Lvl ?" : "Lvl " + p.skillLevel;
+      tdKc.title = "Wise Old Man skill level (info only, not used in rate math)";
+    } else {
+      tdKc.textContent = p.kc === null ? "?" : p.kc.toLocaleString();
+      if (p.kc !== null) tdKc.title = "source: " + p.kcSource;
+    }
 
     const tdChance = document.createElement("td");
     tdChance.className = "num";
@@ -1292,7 +2084,18 @@ function renderHuntTable() {
     });
     tdBoost.appendChild(boostSelect);
 
-    tr.append(tdCheck, tdName, tdSource, tdRate, tdHours, tdKc, tdChance, tdDry, tdBoost);
+    const tdReset = document.createElement("td");
+    if (p.editable && overrides[p.name]) {
+      const resetBtn = document.createElement("button");
+      resetBtn.type = "button";
+      resetBtn.className = "secondary reset-btn";
+      resetBtn.textContent = "Reset";
+      resetBtn.title = "Restore the wiki default rate/rate-per-hour";
+      resetBtn.addEventListener("click", function () { resetOverride(p.name); });
+      tdReset.appendChild(resetBtn);
+    }
+
+    tr.append(tdCheck, tdName, tdSource, tdRate, tdAttemptsPerHour, tdHours, tdKc, tdChance, tdDry, tdBoost, tdReset);
     body.appendChild(tr);
   });
 }
@@ -1302,7 +2105,7 @@ function renderHuntingCount() {
 }
 
 function activeHuntingPets() {
-  return pets.filter(function (p) { return !p.owned && huntingSet.has(p.name); });
+  return pets.filter(function (p) { return !p.owned && huntingSet.has(p.name) && matchesCategory(p); });
 }
 
 document.getElementById("select-top8-btn").addEventListener("click", function () {
@@ -1509,9 +2312,11 @@ function computeChunk(pet, jitter) {
   if (jitter) raw *= 0.85 + Math.random() * 0.3; // +-15%
   let count = snapToNiceStep(raw);
   count = Math.max(CHUNK_MIN, Math.min(CHUNK_MAX, count));
-  count = Math.min(count, 2 * pet.rarity);
+  // Never ask for more than two full expected drop cycles, in ROLLS
+  // (rarity), converted back to attempts via rollsPerAttempt.
+  count = Math.min(count, Math.ceil((2 * pet.rarity) / pet.rollsPerAttempt));
   const minutes = Math.round(count * pet.minutesPerAttempt);
-  const chanceThisSession = 1 - Math.pow(1 - 1 / pet.rarity, count);
+  const chanceThisSession = 1 - Math.pow(1 - 1 / pet.rarity, count * pet.rollsPerAttempt);
   return { count: count, minutes: minutes, chanceThisSession: chanceThisSession };
 }
 
@@ -1525,6 +2330,7 @@ function onSpinComplete(pet) {
     source: pet.source,
     wikiUrl: pet.wikiUrl,
     chunk: chunk.count,
+    unit: unitLabel(pet, chunk.count),
     minutes: chunk.minutes,
     timestamp: new Date().toISOString(),
     done: false
@@ -1534,9 +2340,16 @@ function onSpinComplete(pet) {
   renderHistory();
 }
 
+function unitLabel(pet, count) {
+  const label = UNIT_LABEL[pet.attemptUnit] || "attempts";
+  return count === 1 ? label.replace(/s$/, "") : label;
+}
+
 function showResult(pet, chunk) {
   document.getElementById("result-name").textContent = pet.name;
-  document.getElementById("result-source").textContent = pet.source + " • 1/" + pet.rarity + (pet.assumed ? " (assumed rate)" : "");
+  document.getElementById("result-source").textContent = pet.source + " • 1/" + pet.rarity
+    + (pet.rollsPerAttempt > 1 ? " per " + (UNIT_LABEL[pet.attemptUnit] || "attempt").replace(/s$/, "") + " roll" : "")
+    + (pet.assumedRate ? " (assumed rate)" : "");
   const wikiEl = document.getElementById("result-wiki");
   wikiEl.innerHTML = "";
   if (pet.wikiUrl) {
@@ -1548,6 +2361,7 @@ function showResult(pet, chunk) {
     wikiEl.appendChild(a);
   }
   document.getElementById("result-chunk").textContent = chunk.count.toLocaleString();
+  document.getElementById("result-unit").textContent = unitLabel(pet, chunk.count);
   document.getElementById("result-minutes").textContent = chunk.minutes.toLocaleString();
   document.getElementById("result-chance-session").textContent =
     "P(pet this session) ≈ " + (chunk.chanceThisSession * 100).toFixed(1) + "%";
@@ -1593,8 +2407,8 @@ function renderHistory() {
     const left = document.createElement("div");
     const when = new Date(entry.timestamp);
     left.innerHTML = '<span class="pet">' + escapeHtml(entry.pet) + "</span> "
-      + '<span class="muted">' + escapeHtml(entry.source) + " • " + entry.chunk + " kills (≈" + entry.minutes + " min) • "
-      + when.toLocaleString() + "</span>";
+      + '<span class="muted">' + escapeHtml(entry.source) + " • " + entry.chunk + " " + escapeHtml(entry.unit || "kills")
+      + " (≈" + entry.minutes + " min) • " + when.toLocaleString() + "</span>";
 
     const right = document.createElement("label");
     const cb = document.createElement("input");
@@ -1686,6 +2500,7 @@ function render() {
   document.getElementById("rsn-input").value = rsn;
   renderWomStaleness();
   sessionInput.value = String(sessionMinutes);
+  renderCategoryTabs();
   renderHuntTable();
   renderHuntingCount();
   drawWheel();

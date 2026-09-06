@@ -154,8 +154,22 @@ verification-metadata changes are required.
 ## Pet wheel (web/)
 
 `web/pet-wheel.html` is a single self-contained page (no build step, no server) for randomly
-picking which pet to hunt next and sizing a KC "chunk" for one session, using the same rarity/time
-data as `pet_ranker.py`.
+picking which pet to hunt next and sizing an attempt "chunk" for one session, using the same
+rarity/time data as `pet_ranker.py`.
+
+The wheel's schema is "attempts", not "kills": every pet has an `attemptUnit` (`kill`, `game`,
+`action`, `clue`, or `raid`) and a `rollsPerAttempt` (how many independent 1/rarity chances one
+attempt buys — 1 for a plain boss kill, more for reward-roll minigames like Tempoross or Guardians
+of the Rift). This is what lets skilling pets (actions), clue pets (clues), and raid/minigame pets
+(games/raids) share the wheel with boss kills. Filter tabs above the hunt list (All / Bosses /
+Skilling / Minigame) also gate which pets the wheel can land on; the choice persists per RSN.
+
+Skilling pets (the 9 skill-training pets plus Herbi and Quetzin) have **editable** rate and
+attempts/hour fields right in the hunt table — the OSRS Wiki gives a per-level-99 rate for one
+"best method" per skill, but real playstyles vary, so click into the fields to enter your own and
+use **Reset** to restore the wiki default. Each row's `methodNote` (hover the source cell, or see
+`pets.json`) states which method and wiki page the default came from, and flags whether the
+attempts/hour figure is wiki-stated or an estimate.
 
 ### Opening it
 
@@ -167,10 +181,15 @@ entirely offline; only the optional live-fetch feature below makes a network req
 - Enter your RSN in the "Player" box and click **Fetch from Wise Old Man**. This calls the public
   [Wise Old Man](https://wiseoldman.net) API directly from the page (its `/players/{name}` and
   `/efficiency/rates` endpoints send `Access-Control-Allow-Origin: *`, so a `file://` page can call
-  them without a server in between) to pull your boss KC and community-average kills/hour, which
-  replace the wheel's hardcoded per-kill time estimate where available.
-- Wise Old Man has **no concept of pet ownership** — it only knows KC. Every pet stays in the hunt
-  list; uncheck the ones you already own.
+  them without a server in between) to pull your boss KC, clue count, community-average kills/hour,
+  and per-skill levels, which replace the wheel's hardcoded per-attempt time estimate where
+  available (skilling pets are the exception — see above, their rate is always user-editable, never
+  WOM-driven; WOM only supplies their skill level as read-only info).
+- Wise Old Man has **no concept of pet ownership** — it only knows KC/clues/levels. Every pet stays
+  in the hunt list; uncheck the ones you already own.
+- `soul_wars_zeal` and Barbarian Assault have no usable WOM metric (zeal is a points total, not a
+  game count, and WOM tracks no Barbarian Assault metric at all — both confirmed live 2026-09-05),
+  so Lil' creator and Pet penance queen always use their hardcoded rate.
 - Optionally, also run `python pet_ranker.py --rsn "your name" --json snapshot.json` and load that
   file (see the "Advanced" section on the page) as a KC fallback for the handful of activities Wise
   Old Man doesn't track under a matching boss metric (Guardians of the Rift, Wintertodt, Zalcano,
@@ -185,34 +204,52 @@ accounts don't overwrite each other's data. Nothing is sent anywhere except the 
 requests above:
 
 - Current RSN, and the (shared, not per-account) Wise Old Man kill-rate cache.
-- Per RSN: cached Wise Old Man player KC, an optional loaded `pet_ranker.py` snapshot, hunt-list
-  checkbox selections, per-pet boost multipliers, the session-length setting, and the last 20 spins.
+- Per RSN: cached Wise Old Man player KC/clues/levels, an optional loaded `pet_ranker.py` snapshot,
+  hunt-list checkbox selections, per-pet boost multipliers, skilling-pet rate overrides, the active
+  filter tab, the session-length setting, and the last 20 spins.
 
 Use the **Export/Import** buttons in the "Backup" panel to save or restore all of this as one JSON
 file (for example, before clearing browser data).
 
 ### Regenerating the embedded pet dataset
 
-`web/pet-wheel.html` embeds a merged pet dataset (rarity, time estimate, wiki link, Wise Old Man
-metric) built from `pets.json` and `pet_ranker.py`'s `PETS` tuple. After editing either source,
-regenerate it with:
+`web/pet-wheel.html` embeds a merged pet dataset (rarity, attemptUnit, rollsPerAttempt, time
+estimate, wiki link, methodNote, Wise Old Man metric) built from `pets.json` and `pet_ranker.py`'s
+`PETS` tuple. After editing either source, regenerate it with:
 
 ```
 python web/build_pet_data.py
 ```
 
-It only includes pets present in both sources, since only `pet_ranker.py` supplies a timing
-estimate — pure skilling/milestone pets are intentionally left out until it grows one; the script
-prints what it skipped.
+A pet is included if EITHER source supplies a timing estimate: a `pet_ranker.py` PETS row (fixed-
+rate boss kills and the hiscore-trackable roll/raid pets), or `pets.json`'s own `attemptUnit` +
+`attemptsPerHour` fields (skilling pets and the fixed-rate minigame/clue pets). Two pets are
+excluded from the wheel permanently regardless of any rate data — see "Known gaps" below.
 
 ### Known gaps
 
+- **Broav and Cat are permanently excluded from the wheel** (`web/build_pet_data.py`'s
+  `EXCLUDED_PETS`): both are one-time quest rewards (While Guthix Sleeps / Gertrude's Cat), not
+  repeatable content, so "expected hours to obtain" doesn't apply. `pets.json` still lists them —
+  the RuneLite plugin's collection-log tracking is unaffected — only the wheel skips them.
 - No live ownership source (see above) — ownership filtering exists in the code but is inert until
   a legitimate replacement for WikiSync exists; the hunt list is managed by hand for now.
 - Wise Old Man reports `ehb: 0` (no kill-rate) for Guardians of the Rift, Wintertodt, Zalcano, and
   Tempoross; those pets keep their hardcoded per-attempt time estimate.
-- `pets.json` still carries `itemId: 0` for several newer pets (Bran, Dom, Huberte, Moxi, Nid, Soup,
-  Yami); `web/build_pet_data.py` substitutes `pet_ranker.py`'s id where one exists.
+- Chambers of Xeric Challenge Mode, Tombs of Amascut Expert Mode, and Theatre of Blood Hard Mode all
+  have a materially better pet rate than normal mode, but weren't added as separate wheel rows — the
+  OSRS Wiki excerpts checked (2026-09-05) didn't give a clean, distinct denominator for any of the
+  three. The wheel uses each raid's normal-mode (best-case) rate for all three; see each pet's
+  `methodNote` for the citation.
+- Several skilling pets' `attemptsPerHour` default is a rough, explicitly-flagged estimate rather
+  than a wiki-stated actions/hour figure (the wiki usually gives xp/hour, not actions/hour) —
+  Baby chinchompa, Beaver, Heron, Rift guardian, Rock golem, Rocky, Soup, and Tangleroot all carry
+  `assumedRate: true` for this reason. Giant squirrel, Herbi, and Chompy chick have a wiki-stated
+  rate and are not flagged. Since all skilling-pet rates are user-editable in the hunt table anyway,
+  this mainly affects the out-of-the-box default before you tune it to your own pace.
+- `pets.json` still carries `itemId: 0` for several newer pets (Bran, Dom, Huberte, Moxi, Nid,
+  Yami); `web/build_pet_data.py` substitutes `pet_ranker.py`'s id where one exists. Soup's id
+  (`31283`) was found directly on its wiki page and added to `pets.json`.
   `pets.json`'s previous Butch id (`28249`) conflicted with `pet_ranker.py`'s (`28248`); the OSRS
   Wiki's Butch item infobox confirms `28248` is correct, and `pets.json` has been corrected to match.
 
